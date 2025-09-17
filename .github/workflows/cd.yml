@@ -1,0 +1,70 @@
+name: Publish Python Package to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  id-token: write # for PyPI Trusted Publishing and GitHub Pages deployment
+  pages: write    # for GitHub Pages deployment
+
+jobs:
+  build-docs-and-publish-lib:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10 
+    environment:
+      name: pypi
+      url: https://pypi.org/p/linkmotion-project
+    steps:
+      # https://github.com/actions/checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # https://docs.astral.sh/uv/guides/integration/github/
+      - name: Install uv and set the python version
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      # https://docs.astral.sh/uv/concepts/projects/sync/
+      - name: Install the project and dependencies
+        run: uv sync --locked --all-extras --dev
+
+      - name: Build document files
+        id: build
+        # https://www.sphinx-doc.org/ja/master/man/sphinx-apidoc.html
+        # https://www.sphinx-doc.org/ja/master/man/sphinx-build.html
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          uv run sphinx-apidoc -f -V $VERSION -R $VERSION -o docs src
+          uv run sphinx-build -b html docs docs/_build
+
+      # https://github.com/actions/upload-pages-artifact
+      - name: Upload document files as artifact
+        id: deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_build
+
+      - name: build source files
+        run: uv build
+
+      # https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/
+      # https://github.com/pypa/gh-action-pypi-publish
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  # https://github.com/actions/upload-pages-artifact
+  deploy-pages:
+    name: Deploy Docs to GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build-docs-and-publish-lib
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
