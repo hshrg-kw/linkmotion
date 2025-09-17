@@ -1,5 +1,5 @@
 .. linkmotion documentation master file, created by
-   sphinx-quickstart on Wed Sep 17 15:48:33 2025.
+   sphinx-quickstart on Wed Sep 17 15:58:26 2025.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 

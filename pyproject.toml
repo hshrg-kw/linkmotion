@@ -3,7 +3,7 @@ name = "linkmotion"
 dynamic = ["version"]
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = []
 
 [build-system]
