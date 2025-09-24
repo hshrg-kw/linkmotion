@@ -4,7 +4,11 @@ dynamic = ["version"]
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "python-fcl>=0.7.0.8",
+    "scipy>=1.16.2",
+    "trimesh>=4.8.2",
+]
 
 [build-system]
 # https://pydevtools.com/handbook/how-to/how-to-add-dynamic-versioning-to-uv-projects/
@@ -27,6 +31,7 @@ fallback-version = "0.0.0"
 [dependency-groups]
 dev = [
     "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
     "ruff>=0.13.0",
     "sphinx>=8.2.3",
     "sphinx-rtd-theme>=3.0.2",
