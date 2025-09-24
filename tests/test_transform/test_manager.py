@@ -184,7 +184,9 @@ def test_circular_dependency_prevention():
     # Test the _would_create_cycle method directly
     assert manager._would_create_cycle(0, 2)  # 0 is ancestor of 2
     assert manager._would_create_cycle(1, 2)  # 1 is ancestor of 2
-    assert not manager._would_create_cycle(2, 0)  # This would be valid (child to ancestor)
+    assert not manager._would_create_cycle(
+        2, 0
+    )  # This would be valid (child to ancestor)
     assert not manager._would_create_cycle(3, 0)  # Non-existent node
 
 

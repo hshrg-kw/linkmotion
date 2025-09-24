@@ -242,7 +242,7 @@ def test_is_vector_transformable_invalid():
     assert not is_vector_transformable(np.array([[1], [2], [3], [4]]))  # 4D
     assert not is_vector_transformable("not an array")  # Not ndarray
     assert not is_vector_transformable(np.array([[[1, 2, 3]]]))  # 3D array
-    assert not is_vector_transformable(np.array(['a', 'b', 'c']))  # Non-numeric
+    assert not is_vector_transformable(np.array(["a", "b", "c"]))  # Non-numeric
 
 
 def test_is_vector_transformable_valid():
@@ -295,7 +295,7 @@ def test_is_identity_edge_cases():
 
     # Test small rotation (should not be identity)
     # Note: Very small rotations might still be considered identity due to floating point precision
-    small_rotation = R.from_euler('z', 0.001, degrees=True)  # Use larger angle
+    small_rotation = R.from_euler("z", 0.001, degrees=True)  # Use larger angle
     t3 = Transform(rotate=small_rotation)
     assert not t3.is_identity()
 
