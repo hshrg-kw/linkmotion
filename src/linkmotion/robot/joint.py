@@ -94,6 +94,17 @@ class Joint:
             f"parent='{self.parent_link_name}', child='{self.child_link_name}')"
         )
 
+    def __repr__(self) -> str:
+        """Returns a detailed string representation of the joint."""
+        return (
+            f"Joint(name='{self.name}', type={self.type.name}, "
+            f"parent_link_name='{self.parent_link_name}', "
+            f"child_link_name='{self.child_link_name}', "
+            f"direction={self.direction.tolist()}, "
+            f"center={None if self.center is None else self.center.tolist()}, "
+            f"min={self.min}, max={self.max})"
+        )
+
     @staticmethod
     def from_other(
         other: "Joint", name: str, transform: Transform | None = None
