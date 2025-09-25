@@ -36,6 +36,10 @@ class Link:
         """Returns a string representation of the link."""
         return f"Link(name='{self.name}', shape={self.shape})"
 
+    def __repr__(self) -> str:
+        """Returns a detailed string representation of the link."""
+        return f"Link(name='{self.name}', shape={repr(self.shape)})"
+
     def collision_object(
         self, transform: Transform | None = None
     ) -> fcl.CollisionObject:
