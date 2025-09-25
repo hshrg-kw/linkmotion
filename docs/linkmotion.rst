@@ -1,6 +1,15 @@
 linkmotion package
 ==================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   linkmotion.transform
+   linkmotion.typing
+
 Module contents
 ---------------
 

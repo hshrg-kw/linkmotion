@@ -13,6 +13,6 @@ build
 .env
 _version.py
 
-docs/_*/
+docs/_build/
 .coverage
 htmlcov

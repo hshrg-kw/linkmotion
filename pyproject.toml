@@ -33,6 +33,6 @@ dev = [
     "pytest>=8.4.2",
     "pytest-cov>=7.0.0",
     "ruff>=0.13.0",
+    "shibuya>=2025.9.25",
     "sphinx>=8.2.3",
-    "sphinx-rtd-theme>=3.0.2",
 ]
