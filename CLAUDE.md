@@ -74,6 +74,7 @@ Follow these guidelines strictly to maintain code quality and consistency.
 -   **Type Hinting**: **Always** use type hints for function arguments and return values. This is critical for static analysis and IDE support.
 -   **Error Handling**: Implement robust error handling using `try...except` blocks where exceptions (e.g., `IOError`, `ValueError`) are likely to occur. Avoid catching generic `Exception`. However, the error handling for issues that can be prevented by type hints is not needed because that would be excessive.
 -   **Logging**: Use the `logging` module for all output, including debugging, status information, and errors. Do not use `print()` statements in the library/application code.
+-   **Custom Class `__repr__`**: All custom-defined classes MUST implement the `__repr__` special method for effective debugging and meaningful logging.
 
 ### Python Logging Specifics
 

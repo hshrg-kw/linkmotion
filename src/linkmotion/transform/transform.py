@@ -66,6 +66,12 @@ class Transform:
             translate_array = np.asarray(translate, dtype=float)
             self.position: Vector3 = translate_array
 
+    def __repr__(self) -> str:
+        """Returns a concise string representation for debugging."""
+        return (
+            f"Transform(rotation={self.rotation.as_rotvec()}, position={self.position})"
+        )
+
     def copy(self: "Transform") -> "Transform":
         """Creates a deep copy of the Transform object.
 
