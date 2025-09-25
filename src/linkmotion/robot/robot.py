@@ -44,6 +44,13 @@ class Robot:
             f"{len(self._joint_dict)} joints."
         )
 
+    def __repr__(self) -> str:
+        """Returns a detailed string representation of the robot."""
+        return (
+            f"Robot(links={list(self._link_dict.keys())}, "
+            f"joints={list(self._joint_dict.keys())})"
+        )
+
     def add_link(self, link: Link):
         """Adds a link to the robot model.
 
