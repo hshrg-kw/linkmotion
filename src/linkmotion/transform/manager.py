@@ -31,6 +31,10 @@ class TransformManager:
         # A set of node IDs whose world transforms need recalculation.
         self.dirty_nodes: Set[int] = set()
 
+    def __repr__(self) -> str:
+        """Returns a concise string representation for debugging."""
+        return "TransformManager()"
+
     def _node_exists(self, node_id: int) -> bool:
         """Checks if a node exists in the manager.
 
