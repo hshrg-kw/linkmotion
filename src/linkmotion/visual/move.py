@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 JointValues: TypeAlias = dict[str, float]
 CommandTimeSeries: TypeAlias = dict[float, JointValues]
 
+
 class MoveVisualizer:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
