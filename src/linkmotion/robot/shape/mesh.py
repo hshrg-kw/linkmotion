@@ -48,8 +48,8 @@ class MeshShape(ShapeBase):
                 f"collision_mesh must be a trimesh.Trimesh, got {type(collision_mesh)}"
             )
 
-        if len(collision_mesh.vertices) == 0 or len(collision_mesh.faces) == 0:
-            raise ValueError("collision_mesh must have vertices and faces")
+        # if len(collision_mesh.vertices) == 0 or len(collision_mesh.faces) == 0:
+        #     raise ValueError("collision_mesh must have vertices and faces")
 
         # Set default transform if not provided.
         if default_transform is None:
