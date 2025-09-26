@@ -8,8 +8,8 @@ from linkmotion.robot.shape.box import Box
 from linkmotion.robot.shape.cylinder import Cylinder
 from linkmotion.robot.shape.sphere import Sphere
 from linkmotion.transform import Transform
-from linkmotion.modelling.remove import remove_outside_of_box
-from linkmotion.modelling.sweep import sweep_trimesh, rotate_overlap_trimesh
+from linkmotion.modeling.remove import remove_outside_of_box
+from linkmotion.modeling.sweep import sweep_trimesh, rotate_overlap_trimesh
 from linkmotion.robot.shape.mesh import MeshShape
 from linkmotion.robot.shape.base import ShapeBase
 from linkmotion.typing.numpy import Vector3, RGBA0to1
