@@ -186,6 +186,9 @@ class ShapeBase(ABC):
         if not np.all((color >= 0) & (color <= 1)):
             raise ValueError(f"Color values must be in range [0, 1], got {color}")
 
+        if mesh.vertices.size == 0:
+            return trimesh.Trimesh()
+
         try:
             # Convert [0, 1] RGBA to [0, 255] and apply to all vertices
             vertex_num = len(mesh.vertices)
