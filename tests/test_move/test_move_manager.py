@@ -5,7 +5,7 @@ from scipy.spatial.transform import Rotation as R
 from linkmotion.robot.robot import Robot
 from linkmotion.robot.link import Link
 from linkmotion.robot.joint import Joint, JointType
-from linkmotion.move.manager import MoveManager
+from linkmotion.move.manager import MoveManager, JointLimitError
 from linkmotion.transform import Transform
 
 
@@ -195,3 +195,174 @@ def test_error_handling(concrete_robot_and_manager):
     # 4. Request transform for a non-existent link
     with pytest.raises(ValueError, match="Link 'nonexistent_link' not found"):
         manager.get_transform("nonexistent_link")
+
+
+@pytest.fixture
+def robot_with_joint_limits() -> tuple[MoveManager, Robot]:
+    """Provides a MoveManager with joints that have defined limits."""
+    # Define links
+    base_link = Link.from_sphere(name="base_link", radius=0.1)
+    revolute_arm_link = Link.from_sphere(name="revolute_arm_link", radius=0.1)
+    prismatic_arm_link = Link.from_sphere(name="prismatic_arm_link", radius=0.1)
+
+    # Define joints with limits
+    revolute_joint = Joint(
+        name="revolute_joint",
+        type=JointType.REVOLUTE,
+        parent_link_name="base_link",
+        child_link_name="revolute_arm_link",
+        direction=np.array([0, 0, 1]),
+        center=np.array([0, 0, 0]),  # Center required for revolute joints
+        min_=-np.pi,  # -180 degrees
+        max_=np.pi,  # +180 degrees
+    )
+
+    prismatic_joint = Joint(
+        name="prismatic_joint",
+        type=JointType.PRISMATIC,
+        parent_link_name="base_link",
+        child_link_name="prismatic_arm_link",
+        direction=np.array([1, 0, 0]),
+        min_=-1.0,  # -1 meter
+        max_=2.0,  # +2 meters
+    )
+
+    # Build robot
+    robot = Robot()
+    robot.add_link(base_link)
+    robot.add_link(revolute_arm_link)
+    robot.add_link(prismatic_arm_link)
+    robot.add_joint(revolute_joint)
+    robot.add_joint(prismatic_joint)
+
+    manager = MoveManager(robot)
+    return manager, robot
+
+
+def test_joint_limit_error_revolute(robot_with_joint_limits):
+    """Tests JointLimitError for revolute joint limits."""
+    manager, robot = robot_with_joint_limits
+    joint = robot.joint("revolute_joint")
+
+    # Test exceeding maximum limit
+    with pytest.raises(JointLimitError) as exc_info:
+        manager.move("revolute_joint", 4.0)  # > pi
+
+    error = exc_info.value
+    assert error.value == 4.0
+    assert error.joint == joint
+    assert "4.0" in str(error)
+    assert "revolute_joint" in str(error)
+    assert f"[{joint.min}, {joint.max}]" in str(error)
+
+    # Test exceeding minimum limit
+    with pytest.raises(JointLimitError) as exc_info:
+        manager.move("revolute_joint", -4.0)  # < -pi
+
+    error = exc_info.value
+    assert error.value == -4.0
+    assert error.joint == joint
+
+
+def test_joint_limit_error_prismatic(robot_with_joint_limits):
+    """Tests JointLimitError for prismatic joint limits."""
+    manager, robot = robot_with_joint_limits
+    joint = robot.joint("prismatic_joint")
+
+    # Test exceeding maximum limit
+    with pytest.raises(JointLimitError) as exc_info:
+        manager.move("prismatic_joint", 3.0)  # > 2.0
+
+    error = exc_info.value
+    assert error.value == 3.0
+    assert error.joint == joint
+    assert "prismatic_joint" in str(error)
+
+    # Test exceeding minimum limit
+    with pytest.raises(JointLimitError) as exc_info:
+        manager.move("prismatic_joint", -2.0)  # < -1.0
+
+    error = exc_info.value
+    assert error.value == -2.0
+    assert error.joint == joint
+
+
+def test_joint_limit_valid_moves(robot_with_joint_limits):
+    """Tests that valid moves within limits work correctly."""
+    manager, _ = robot_with_joint_limits
+
+    # Test valid revolute joint move
+    manager.move("revolute_joint", np.pi / 2)  # Within [-pi, pi]
+    assert manager.joint_value("revolute_joint") == np.pi / 2
+
+    # Test valid prismatic joint move
+    manager.move("prismatic_joint", 1.5)  # Within [-1.0, 2.0]
+    assert manager.joint_value("prismatic_joint") == 1.5
+
+
+def test_joint_value_method(concrete_robot_and_manager):
+    """Tests the joint_value method functionality."""
+    manager, _ = concrete_robot_and_manager
+
+    # Test getting value of unset joint
+    assert manager.joint_value("joint1") == 0
+
+    # Move joint and test getting its value
+    test_value = np.pi / 4
+    manager.move("joint1", test_value)
+    assert manager.joint_value("joint1") == test_value
+
+    # Move another joint and test both values
+    test_value2 = 0.75
+    manager.move("joint2", test_value2)
+    assert manager.joint_value("joint1") == test_value
+    assert manager.joint_value("joint2") == test_value2
+
+    # Test that reset clears joint values
+    manager.reset_move()
+    assert manager.joint_value("joint1") == 0
+    assert manager.joint_value("joint2") == 0
+
+
+def test_joint_value_nonexistent_joint(concrete_robot_and_manager):
+    """Tests joint_value method with nonexistent joint."""
+    manager, _ = concrete_robot_and_manager
+
+    with pytest.raises(
+        ValueError, match="Joint 'nonexistent' not found in the robot model."
+    ):
+        manager.joint_value("nonexistent")
+
+
+def test_copy_method(concrete_robot_and_manager):
+    """Tests the copy method functionality."""
+    manager, robot = concrete_robot_and_manager
+
+    # Move some joints
+    manager.move("joint1", np.pi / 3)
+    manager.move("joint2", 1.2)
+
+    # Create copy
+    manager_copy = manager.copy()
+
+    # Test that copy has same robot reference
+    assert manager_copy.robot is robot
+
+    # Test that transforms are copied correctly
+    original_transform = manager.get_transform("arm_link_1")
+    copied_transform = manager_copy.get_transform("arm_link_1")
+    assert original_transform == copied_transform
+
+    # Test that joint values are preserved
+    assert manager_copy.joint_value("joint1") == np.pi / 3
+    assert manager_copy.joint_value("joint2") == 1.2
+
+    # Test independence: modify original and check copy is unaffected
+    manager.move("joint1", np.pi / 2)
+    assert manager.joint_value("joint1") == np.pi / 2
+    assert manager_copy.joint_value("joint1") == np.pi / 3  # Should remain unchanged
+
+    # Test independence: modify copy and check original is unaffected
+    manager_copy.move("joint2", 2.0)
+    assert manager.joint_value("joint2") == 1.2  # Should remain unchanged
+    assert manager_copy.joint_value("joint2") == 2.0
