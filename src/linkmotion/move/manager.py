@@ -5,12 +5,20 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 from linkmotion.robot.robot import Robot
-from linkmotion.robot.joint import JointType
+from linkmotion.robot.joint import JointType, Joint
 from linkmotion.transform import Transform
 from linkmotion.typing.numpy import Vector3
 from linkmotion.transform.manager import TransformManager
 
 logger = logging.getLogger(__name__)
+
+
+class JointLimitError(Exception):
+    def __init__(self, value: float, joint: Joint):
+        self.value = value
+        self.joint = joint
+        message = f"'{value}' is out of limits for joint '{joint.name}': [{joint.min}, {joint.max}]"
+        super().__init__(message)
 
 
 class MoveManager:
@@ -37,6 +45,7 @@ class MoveManager:
         """
         self.robot = robot
         self.transform_manager = TransformManager()
+        self.joint_values_map = dict[str, float]()
 
         # Create a mapping from link names to integer IDs for quick lookups.
         self.link_name_to_id = {
@@ -106,10 +115,7 @@ class MoveManager:
             case JointType.PRISMATIC:
                 if isinstance(value, (int, float)):
                     if value > joint.max or value < joint.min:
-                        raise ValueError(
-                            f"Value {value} out of limits for joint '{joint_name}': "
-                            f"[{joint.min}, {joint.max}]"
-                        )
+                        raise JointLimitError(value, joint)
                     translate = value * np.array(joint.direction)
                     local_transform = Transform(translate=translate)
                 else:
@@ -129,10 +135,7 @@ class MoveManager:
                 if joint.type == JointType.REVOLUTE and (
                     value > joint.max or value < joint.min
                 ):
-                    raise ValueError(
-                        f"Value {value} out of limits for joint '{joint_name}': "
-                        f"[{joint.min}, {joint.max}]"
-                    )
+                    raise JointLimitError(value, joint)
 
                 # To rotate around a specific point (joint.center), we apply a sequence of transforms:
                 # 1. Translate to origin: Move the object so the rotation center is at (0,0,0).
@@ -164,6 +167,8 @@ class MoveManager:
 
         if local_transform is not None:
             self.transform_manager.set_local_transform(child_link_id, local_transform)
+            if isinstance(value, (int, float)):
+                self.joint_values_map[joint_name] = value
 
     def get_transform(self, link_name: str) -> Transform:
         """Retrieves the world-space transform of a given link.
@@ -273,3 +278,45 @@ class MoveManager:
         """Resets all joint movements to their initial state (identity transform)."""
         logger.info("Resetting all joint transforms.")
         self.transform_manager.reset_all_transforms()
+        self.joint_values_map.clear()
+
+    def copy(self) -> "MoveManager":
+        """Creates a copy of the MoveManager instance.
+
+        TransformManager is a deep copy to ensure independent state.
+        robot is shallow copied as it is assumed to be immutable.
+
+        Returns:
+            MoveManager: A new instance of MoveManager with the same
+                robot model and transform state.
+        """
+        new_manager = MoveManager(self.robot)
+        new_manager.transform_manager = self.transform_manager.copy()
+        new_manager.joint_values_map = self.joint_values_map.copy()
+        return new_manager
+
+    def joint_value(self, joint_name: str) -> float:
+        """Gets the current value of a joint.
+
+        Args:
+            joint_name (str): The name of the joint.
+
+        Returns:
+            float: The current value of the joint
+        """
+        joint_type = self.robot.joint(joint_name).type
+        if joint_type in [JointType.FIXED, JointType.PLANAR, JointType.FLOATING]:
+            raise ValueError(
+                f"Joint '{joint_name}' of type '{joint_type}' has no single value."
+            )
+        elif joint_type in [
+            JointType.REVOLUTE,
+            JointType.PRISMATIC,
+            JointType.CONTINUOUS,
+        ]:
+            ret = self.joint_values_map.get(joint_name, 0)
+            return ret
+        else:
+            raise ValueError(
+                f"Unsupported joint type: {joint_type} of joint '{joint_name}'."
+            )
