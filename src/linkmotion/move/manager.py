@@ -104,12 +104,18 @@ class MoveManager:
         local_transform = None
         match joint.type:
             case JointType.PRISMATIC:
-                if not isinstance(value, (int, float)):
+                if isinstance(value, (int, float)):
+                    if value > joint.max or value < joint.min:
+                        raise ValueError(
+                            f"Value {value} out of limits for joint '{joint_name}': "
+                            f"[{joint.min}, {joint.max}]"
+                        )
+                    translate = value * np.array(joint.direction)
+                    local_transform = Transform(translate=translate)
+                else:
                     raise ValueError(
                         f"Value for prismatic joint must be a float, got {type(value)}"
                     )
-                translate = value * np.array(joint.direction)
-                local_transform = Transform(translate=translate)
 
             case JointType.REVOLUTE | JointType.CONTINUOUS:
                 if not isinstance(value, (int, float)):
@@ -119,6 +125,13 @@ class MoveManager:
                 if joint.center is None:
                     raise ValueError(
                         f"Joint '{joint_name}' does not have a defined center for rotation."
+                    )
+                if joint.type == JointType.REVOLUTE and (
+                    value > joint.max or value < joint.min
+                ):
+                    raise ValueError(
+                        f"Value {value} out of limits for joint '{joint_name}': "
+                        f"[{joint.min}, {joint.max}]"
                     )
 
                 # To rotate around a specific point (joint.center), we apply a sequence of transforms:
