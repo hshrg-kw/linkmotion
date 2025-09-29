@@ -38,6 +38,17 @@ class CollisionManager:
         link_count = len(self.robot.links())
         return f"CollisionManager(links={link_count})"
 
+    def copy(self) -> "CollisionManager":
+        """Creates a copy of the CollisionManager.
+
+        MoveManager is copied to ensure the original state remains unchanged.
+        Robot is shallow copied as it is typically immutable.
+
+        Returns:
+            CollisionManager: A new instance with a copied MoveManager.
+        """
+        return CollisionManager(self.mm.copy())
+
     def _create_broad_phase_manager(
         self, link_names: set[str]
     ) -> fcl.DynamicAABBTreeCollisionManager:

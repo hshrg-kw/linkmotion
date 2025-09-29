@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "joblib>=1.5.2",
     "manifold3d>=3.2.1",
     "python-fcl>=0.7.0.8",
     "scipy>=1.16.2",
@@ -16,6 +17,7 @@ dependencies = [
 jup = [
     "jupyter>=1.1.1",
     "k3d>=2.17.0",
+    "plotly>=6.3.0",
 ]
 
 [build-system]

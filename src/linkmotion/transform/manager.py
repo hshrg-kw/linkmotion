@@ -350,3 +350,26 @@ class TransformManager:
         if not self._node_exists(node_id):
             raise ValueError(f"Node ID {node_id} does not exist.")
         return list(self.children_map.get(node_id, set()))
+
+    def copy(self) -> "TransformManager":
+        """Creates a deep copy of the TransformManager.
+
+        Returns:
+            A new TransformManager instance with the same data.
+        """
+        new_manager = TransformManager()
+        new_manager.parent_map = self.parent_map.copy()
+        new_manager.children_map = defaultdict(
+            set, {k: v.copy() for k, v in self.children_map.items()}
+        )
+        new_manager.default_local_transforms = {
+            k: v.copy() for k, v in self.default_local_transforms.items()
+        }
+        new_manager.local_transforms = {
+            k: v.copy() for k, v in self.local_transforms.items()
+        }
+        new_manager.world_transforms = {
+            k: v.copy() for k, v in self.world_transforms.items()
+        }
+        new_manager.dirty_nodes = self.dirty_nodes.copy()
+        return new_manager
