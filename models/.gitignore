@@ -1,0 +1,4 @@
+*.urdf
+*.stl
+!toy_model.urdf
+!forearm.stl

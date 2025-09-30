@@ -1,5 +1,6 @@
 import logging
 from collections import deque, defaultdict
+from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Set
 
 from linkmotion.robot.link import Link
@@ -120,6 +121,14 @@ class Robot:
             err_msg = f"Joint '{joint_name}' not found in the robot model."
             logger.error(err_msg)
             raise ValueError(err_msg) from None
+
+    def joints(self) -> list[Joint]:
+        """Returns a list of all joints in the robot.
+
+        Returns:
+            A list of all Joint objects in the model.
+        """
+        return list(self._joint_dict.values())
 
     def link(self, link_name: str) -> Link:
         """Retrieves a link by its name.
@@ -550,3 +559,73 @@ class Robot:
         logger.info(
             f"Successfully concatenated another robot, connecting via joint '{new_joint.name}'."
         )
+
+    @classmethod
+    def from_urdf_file(cls, urdf_path: str | Path) -> "Robot":
+        """Create a Robot instance from a URDF file.
+
+        Args:
+            urdf_path: Path to the URDF file.
+
+        Returns:
+            A new Robot instance loaded from the URDF.
+
+        Raises:
+            FileNotFoundError: If the URDF file doesn't exist.
+            ValueError: If the URDF format is invalid.
+        """
+        from linkmotion.urdf.parser import UrdfParser
+
+        parser = UrdfParser()
+        robot = parser.parse_file(urdf_path)
+        logger.info(f"Loaded robot from URDF file: {urdf_path}")
+        return robot
+
+    @classmethod
+    def from_urdf_string(cls, urdf_string: str) -> "Robot":
+        """Create a Robot instance from a URDF string.
+
+        Args:
+            urdf_string: URDF content as a string.
+
+        Returns:
+            A new Robot instance loaded from the URDF.
+
+        Raises:
+            ValueError: If the URDF format is invalid.
+        """
+        from linkmotion.urdf.parser import UrdfParser
+
+        parser = UrdfParser()
+        robot = parser.parse_string(urdf_string)
+        logger.info("Loaded robot from URDF string")
+        return robot
+
+    def to_urdf_file(self, urdf_path: str | Path, robot_name: str = "robot") -> None:
+        """Save the Robot to a URDF file.
+
+        Args:
+            urdf_path: Path where the URDF file will be saved.
+            robot_name: Name to assign to the robot in the URDF.
+        """
+        from linkmotion.urdf.writer import UrdfWriter
+
+        writer = UrdfWriter()
+        writer.write_file(self, urdf_path, robot_name)
+        logger.info(f"Saved robot to URDF file: {urdf_path}")
+
+    def to_urdf_string(self, robot_name: str = "robot") -> str:
+        """Convert the Robot to a URDF string.
+
+        Args:
+            robot_name: Name to assign to the robot in the URDF.
+
+        Returns:
+            URDF content as a string.
+        """
+        from linkmotion.urdf.writer import UrdfWriter
+
+        writer = UrdfWriter()
+        urdf_string = writer.to_string(self, robot_name)
+        logger.info("Converted robot to URDF string")
+        return urdf_string
