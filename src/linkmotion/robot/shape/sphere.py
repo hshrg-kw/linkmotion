@@ -17,8 +17,6 @@ class Sphere(ShapeBase):
 
     Attributes:
         radius (float): The radius of the sphere.
-        center (Vector3): The center position of the sphere, which defines its
-            default_transform.
     """
 
     def __init__(
