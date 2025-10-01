@@ -92,8 +92,8 @@ def create_unsupported_geometry_robot() -> Robot:
     return robot
 
 
-def test_unsupported_geometry_conversion() -> bool:
-    """Test conversion of unsupported geometry types to mesh geometry in URDF export.
+def _run_unsupported_geometry_conversion() -> bool:
+    """Run conversion of unsupported geometry types to mesh geometry in URDF export.
 
     Returns:
         True if all conversion tests pass, False otherwise.
@@ -278,7 +278,7 @@ def test_robot_creation_with_unsupported_geometry(
 
 def test_unsupported_geometry_export_conversion() -> None:
     """Test that unsupported geometry gets properly converted during export."""
-    success = test_unsupported_geometry_conversion()
+    success = _run_unsupported_geometry_conversion()
     assert success, "Unsupported geometry conversion failed"
 
 
@@ -311,6 +311,6 @@ def test_mesh_validation() -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    success = test_unsupported_geometry_conversion()
+    success = _run_unsupported_geometry_conversion()
     if not success:
         exit(1)

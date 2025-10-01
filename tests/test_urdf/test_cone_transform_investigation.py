@@ -64,8 +64,8 @@ def investigate_cone_coordinate_systems() -> float:
     return z_offset
 
 
-def test_cone_transform_in_urdf() -> List[Tuple[str, List[float]]]:
-    """Test cone transform coordinates in URDF export.
+def _investigate_cone_transform_in_urdf() -> List[Tuple[str, List[float]]]:
+    """Investigate cone transform coordinates in URDF export.
 
     Returns:
         List of tuples containing (link_name, origin_xyz_coordinates).
@@ -123,8 +123,8 @@ def test_cone_transform_in_urdf() -> List[Tuple[str, List[float]]]:
     return cone_origins
 
 
-def test_corrected_cone_conversion() -> bool:
-    """Test corrected cone conversion and coordinate system alignment.
+def _investigate_corrected_cone_conversion() -> bool:
+    """Investigate corrected cone conversion and coordinate system alignment.
 
     Returns:
         True if coordinate systems match, False otherwise.
@@ -203,7 +203,7 @@ def test_robot() -> Robot:
 
 def test_cone_urdf_export_origins() -> None:
     """Test that cone origins are correctly exported in URDF."""
-    cone_origins = test_cone_transform_in_urdf()
+    cone_origins = _investigate_cone_transform_in_urdf()
 
     assert len(cone_origins) > 0, "No cone origins found in URDF"
 
@@ -217,7 +217,7 @@ def test_cone_urdf_export_origins() -> None:
 
 def test_cone_conversion_accuracy() -> None:
     """Test that cone conversion maintains coordinate system accuracy."""
-    conversion_ok = test_corrected_cone_conversion()
+    conversion_ok = _investigate_corrected_cone_conversion()
 
     assert conversion_ok, "Cone coordinate system conversion failed accuracy test"
 
@@ -232,10 +232,10 @@ if __name__ == "__main__":
     z_offset = investigate_cone_coordinate_systems()
 
     # Test current behavior
-    cone_origins = test_cone_transform_in_urdf()
+    cone_origins = _investigate_cone_transform_in_urdf()
 
     # Test the conversion directly
-    conversion_ok = test_corrected_cone_conversion()
+    conversion_ok = _investigate_corrected_cone_conversion()
 
     if not conversion_ok:
         logger.warning(

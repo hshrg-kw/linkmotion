@@ -165,8 +165,8 @@ def analyze_robot_geometry(robot: Robot) -> Dict[str, Any]:
     }
 
 
-def test_practical_conversion_example() -> bool:
-    """Test practical example of mixed geometry robot with conversions.
+def _run_practical_conversion_example() -> bool:
+    """Run practical example of mixed geometry robot with conversions.
 
     Returns:
         True if all tests pass, False otherwise.
@@ -323,7 +323,7 @@ def test_mixed_geometry_robot_creation(mixed_geometry_robot: Robot) -> None:
 
 def test_mixed_geometry_export_with_meshes() -> None:
     """Test export of mixed geometry robot with mesh conversion."""
-    success = test_practical_conversion_example()
+    success = _run_practical_conversion_example()
     assert success, "Mixed geometry robot export with mesh conversion failed"
 
 
@@ -348,6 +348,6 @@ def test_geometry_analysis() -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    success = test_practical_conversion_example()
+    success = _run_practical_conversion_example()
     if not success:
         exit(1)
