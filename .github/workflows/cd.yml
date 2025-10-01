@@ -38,7 +38,7 @@ jobs:
         # https://www.sphinx-doc.org/ja/master/man/sphinx-build.html
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          uv run sphinx-apidoc -f -V $VERSION -R $VERSION -o docs src
+          uv run sphinx-apidoc -f -V $VERSION -R $VERSION -o docs/api src/linkmotion
           uv run sphinx-build -b html docs docs/_build
 
       # https://github.com/actions/upload-pages-artifact

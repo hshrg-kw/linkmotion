@@ -18,3 +18,17 @@ help:
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+# Custom targets for LinkMotion
+clean-all:
+	rm -rf _build/
+	rm -rf api/
+	mkdir -p api/
+
+rebuild: clean-all html
+
+apidoc:
+	uv run sphinx-apidoc -f -o api ../src/linkmotion
+
+livehtml:
+	uv run sphinx-autobuild $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS) $(O)

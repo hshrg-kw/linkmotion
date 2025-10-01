@@ -1,0 +1,52 @@
+/* Custom CSS for LinkMotion documentation */
+
+/* Improve code block styling */
+.highlight {
+    border-left: 4px solid #007acc;
+    margin: 1em 0;
+}
+
+/* Style autosummary tables */
+.autosummary {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.autosummary td {
+    padding: 0.5em;
+    border-bottom: 1px solid #e1e4e8;
+}
+
+/* Improve module documentation layout */
+.section h1 {
+    border-bottom: 2px solid #007acc;
+    padding-bottom: 0.3em;
+}
+
+/* Better spacing for function/class documentation */
+.py.function, .py.class, .py.method {
+    margin-bottom: 2em;
+}
+
+/* Style parameter lists */
+.field-list dt {
+    font-weight: bold;
+    color: #007acc;
+}
+
+/* Improve note and warning admonitions */
+.admonition {
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.admonition.note {
+    border-left: 4px solid #17a2b8;
+    background-color: #d1ecf1;
+}
+
+.admonition.warning {
+    border-left: 4px solid #ffc107;
+    background-color: #fff3cd;
+}

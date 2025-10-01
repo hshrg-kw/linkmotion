@@ -14,5 +14,6 @@ build
 _version.py
 
 docs/_build/
+docs/api
 .coverage
 htmlcov
