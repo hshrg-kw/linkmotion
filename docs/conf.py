@@ -43,15 +43,15 @@ autodoc_default_options = {
 }
 
 # Prevent duplicated member documentation
-autodoc_member_order = 'bysource'
+autodoc_member_order = "bysource"
 autodoc_inherit_docstrings = True
-autodoc_typehints = 'description'
+autodoc_typehints = "description"
 
 # Generate autosummary pages
 autosummary_generate = True
 
 # Suppress warnings for cross-reference ambiguity and duplicates
-suppress_warnings = ['ref.python', 'autodoc.duplicate_object']
+suppress_warnings = ["ref.python", "autodoc.duplicate_object"]
 
 # Configure primary references
 add_module_names = False
