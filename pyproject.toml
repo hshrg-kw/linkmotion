@@ -1,9 +1,18 @@
 [project]
 name = "linkmotion"
 dynamic = ["version"]
-description = "Add your description here"
+description = "LinkMotion is a comprehensive robotics library that provides tools for robot modeling, joint control, collision detection, visualization, and URDF import/export functionality."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["robotics", "simulation", "kinematics", "collision detection", "visualization", "automation", "urdf"]
 requires-python = ">=3.12"
+authors = [
+    {name = "hshrg-kw", email = "232059135+hshrg-kw@users.noreply.github.com"},
+]
+maintainers = [
+    {name = "hshrg-kw", email = "232059135+hshrg-kw@users.noreply.github.com"},
+]
 dependencies = [
     "joblib>=1.5.2",
     "manifold3d>=3.2.1",
@@ -12,6 +21,19 @@ dependencies = [
     "shapely>=2.1.2",
     "trimesh>=4.8.2",
 ]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+
+[project.urls]
+Homepage = "https://github.com/hshrg-kw/linkmotion"
+Documentation = "https://hshrg-kw.github.io/linkmotion/"
+Repository = "https://github.com/hshrg-kw/linkmotion"
+Issues = "https://github.com/hshrg-kw/linkmotion/issues"
 
 [project.optional-dependencies]
 jup = [
