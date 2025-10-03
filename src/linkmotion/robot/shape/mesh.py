@@ -111,3 +111,21 @@ class MeshShape(ShapeBase):
         bvh.addSubModel(self.collision_mesh.vertices, self.collision_mesh.faces)
         bvh.endModel()
         return bvh
+
+    def transformed_collision_mesh(
+        self, transform: Transform | None = None
+    ) -> trimesh.Trimesh:
+        """Creates a transformed collision mesh for this shape.
+
+        Args:
+            transform: The transform to apply to the shape.
+                       Defaults to an identity transform.
+        Returns:
+            A transformed trimesh object for collision checking.
+        """
+        combined_transform = (
+            transform.apply(self.default_transform)
+            if transform
+            else self.default_transform
+        )
+        return combined_transform.apply(self.collision_mesh)
