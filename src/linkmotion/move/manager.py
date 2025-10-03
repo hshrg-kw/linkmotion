@@ -49,7 +49,7 @@ class MoveManager:
 
         # Create a mapping from link names to integer IDs for quick lookups.
         self.link_name_to_id = {
-            link.name: idx for idx, link in enumerate(self.robot.links())
+            link.name: idx for idx, link in enumerate(self.robot.traverse_links())
         }
 
         # Build the transform tree based on the robot's link hierarchy.
