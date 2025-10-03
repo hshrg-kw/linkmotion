@@ -3,9 +3,12 @@ from collections import deque, defaultdict
 from pathlib import Path
 from typing import Dict, Iterator, List, Optional, Set
 
+import trimesh
+
 from linkmotion.robot.link import Link
 from linkmotion.robot.joint import Joint, JointType
 from linkmotion.transform.transform import Transform
+from linkmotion.robot.shape.mesh import MeshShape
 
 
 logger = logging.getLogger(__name__)
@@ -376,6 +379,74 @@ class Robot:
                         visited.add(link.name)
                         yield link
 
+    def remove_joint(self, joint_name: str):
+        """Removes a joint from the robot and updates all associated caches.
+
+        Args:
+            joint_name: The name of the joint to remove.
+
+        Raises:
+            ValueError: If the joint is not found.
+        """
+        joint = self.joint(joint_name)
+        parent_link_name = joint.parent_link_name
+        child_link_name = joint.child_link_name
+
+        # Remove joint from main dictionary
+        self._joint_dict.pop(joint_name, None)
+
+        # Update caches to remove references to this joint
+        self._child_link_to_parent_joint.pop(child_link_name, None)
+
+        # Remove from parent's child joints set
+        if parent_link_name in self._parent_link_to_child_joints:
+            self._parent_link_to_child_joints[parent_link_name].discard(joint_name)
+            # Clean up empty sets
+            if not self._parent_link_to_child_joints[parent_link_name]:
+                self._parent_link_to_child_joints.pop(parent_link_name)
+
+        logger.info(f"Removed joint: '{joint_name}'")
+
+    def remove_link_with_descendants(self, link_name: str):
+        """Removes a link and all its descendant links and associated joints.
+
+        This method traverses the kinematic tree starting from the specified link
+        and removes all descendant links and their connecting joints.
+
+        Args:
+            link_name: The name of the link to remove along with its descendants.
+
+        Raises:
+            ValueError: If the link is not found.
+        """
+        # Find all descendant links including the specified link
+        descendant_links = list(self.traverse_child_links(link_name, include_self=True))
+        link_names_to_remove = {link.name for link in descendant_links}
+
+        # Find all joints to remove (parent joint of each link and child joints)
+        joint_names_to_remove: Set[str] = set()
+        for link_name_to_check in link_names_to_remove:
+            parent_joint = self.parent_joint(link_name_to_check)
+            if parent_joint:
+                joint_names_to_remove.add(parent_joint.name)
+            child_joints = self.child_joints(link_name_to_check)
+            for child_joint in child_joints:
+                joint_names_to_remove.add(child_joint.name)
+
+        # Remove all joints first to maintain cache consistency
+        for joint_name in joint_names_to_remove:
+            self.remove_joint(joint_name)
+
+        # Remove all links
+        for link_name_to_remove in link_names_to_remove:
+            self._link_dict.pop(link_name_to_remove, None)
+            self._child_link_to_parent_joint.pop(link_name_to_remove, None)
+            self._parent_link_to_child_joints.pop(link_name_to_remove, None)
+
+        logger.info(
+            f"Removed link '{link_name}' and its {len(descendant_links) - 1} descendant links."
+        )
+
     def rename_link(self, old_name: str, new_name: str):
         """Renames a link and updates all associated joints and caches.
 
@@ -499,6 +570,72 @@ class Robot:
 
         logger.info(
             f"Divided link '{link_name_to_be_divided}' into '{parent_link.name}' and '{child_link.name}'."
+        )
+
+    def solidify_link(self, link_name: str):
+        """Solidifies a link and all its descendant links into a single mesh link.
+
+        This method combines all descendant links (which must all be MeshShapes)
+        into a single unified mesh link, removing the intermediate structure.
+
+        Args:
+            link_name: The name of the link to solidify along with its descendants.
+
+        Raises:
+            ValueError: If the link is not found or if any descendant link does
+                        not have a MeshShape.
+        """
+        # Find all descendant links including the specified link
+        descendant_links = list(self.traverse_child_links(link_name, include_self=True))
+
+        # Validate that all links have mesh shapes
+        for link in descendant_links:
+            if not isinstance(link.shape, MeshShape):
+                err_msg = (
+                    f"Link '{link.name}' does not have a mesh shape and cannot "
+                    f"be solidified. All links must be MeshShape instances."
+                )
+                logger.error(err_msg)
+                raise ValueError(err_msg)
+
+        # Collect and concatenate all collision meshes
+        collision_meshes_to_solidify = [
+            link.shape.transformed_collision_mesh()
+            for link in descendant_links
+            if isinstance(link.shape, MeshShape)
+        ]
+        solidified_collision_mesh: trimesh.Trimesh = trimesh.util.concatenate(
+            collision_meshes_to_solidify
+        )
+
+        # Create new link with solidified mesh
+        new_link = Link.from_mesh(link_name, solidified_collision_mesh)
+
+        # Cache the old parent joint for reattachment
+        old_parent_joint = self.parent_joint(link_name)
+
+        # Remove old structure
+        self.remove_link_with_descendants(link_name)
+
+        # Add new solidified link
+        self.add_link(new_link)
+
+        # Reattach parent joint if it existed
+        if old_parent_joint is not None:
+            new_joint = Joint(
+                name=old_parent_joint.name,
+                type=old_parent_joint.type,
+                parent_link_name=old_parent_joint.parent_link_name,
+                child_link_name=old_parent_joint.child_link_name,
+                direction=old_parent_joint.direction,
+                center=old_parent_joint.center,
+                min_=old_parent_joint.min,
+                max_=old_parent_joint.max,
+            )
+            self.add_joint(new_joint)
+
+        logger.info(
+            f"Solidified link '{link_name}' and {len(descendant_links) - 1} descendants into a single mesh."
         )
 
     def concatenate_robot(
