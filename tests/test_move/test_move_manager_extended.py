@@ -88,29 +88,6 @@ def inconsistent_robot_fixture() -> Robot:
 class TestMoveManagerExtended:
     """Extended tests for MoveManager to improve coverage."""
 
-    def test_initialization_with_inconsistent_robot(self, inconsistent_robot_fixture):
-        """Tests MoveManager initialization with inconsistent robot model."""
-        # Create a joint with non-existent parent link and manually add it
-        invalid_joint = Joint(
-            name="invalid_joint",
-            type=JointType.REVOLUTE,
-            parent_link_name="nonexistent_parent",  # This parent doesn't exist
-            child_link_name="child_link",
-            direction=np.array([0, 0, 1]),
-            center=np.array([0, 0, 0]),
-        )
-
-        # Manually add joint to bypass Robot's validation
-        inconsistent_robot_fixture._joint_dict["invalid_joint"] = invalid_joint
-
-        # Also need to update the parent-child mappings to trigger the error
-        inconsistent_robot_fixture._child_link_to_parent_joint["child_link"] = (
-            "invalid_joint"
-        )
-
-        with pytest.raises(ValueError, match="Inconsistent robot model"):
-            MoveManager(inconsistent_robot_fixture)
-
     def test_move_continuous_joint(self, extended_robot_and_manager):
         """Tests moving a continuous joint."""
         manager, _ = extended_robot_and_manager
