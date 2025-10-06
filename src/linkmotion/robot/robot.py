@@ -697,6 +697,35 @@ class Robot:
             f"Successfully concatenated another robot, connecting via joint '{new_joint.name}'."
         )
 
+    def aggregate_collision_meshes(
+        self, representative_link_name: str, link_names_to_aggregate: set[str]
+    ):
+        target_link_names = link_names_to_aggregate | {representative_link_name}
+
+        # validation
+        if not target_link_names <= set(self._link_dict.keys()):
+            raise ValueError("Some links to aggregate do not exist in the robot.")
+
+        # Collect collision meshes from the specified links
+        collision_meshes = []
+        for link_name in target_link_names:
+            shape = self.link(link_name).shape
+            # validation
+            if not isinstance(shape, MeshShape):
+                raise ValueError(f"Link '{link_name}' does not have a MeshShape.")
+            collision_meshes.append(shape.collision_mesh)
+
+        # Combine the collision meshes into a single mesh
+        combined_mesh = trimesh.util.concatenate(collision_meshes)
+        # Update the representative link with the new combined mesh
+        representative_shape = self.link(representative_link_name).shape
+        if isinstance(representative_shape, MeshShape):
+            representative_shape.collision_mesh = combined_mesh
+
+        logger.info(
+            f"Aggregated collision meshes of {len(link_names_to_aggregate)} links into '{representative_link_name}'."
+        )
+
     @classmethod
     def from_urdf_file(cls, urdf_path: str | Path) -> "Robot":
         """Create a Robot instance from a URDF file.
