@@ -1,6 +1,8 @@
 import trimesh
 import fcl
 import logging
+from contextlib import redirect_stderr, redirect_stdout
+import os
 
 from linkmotion.robot.shape.base import ShapeBase
 from linkmotion.transform import Transform
@@ -104,13 +106,24 @@ class MeshShape(ShapeBase):
         Returns:
             An FCLBVH object.
         """
-        bvh = fcl.BVHModel()
-        bvh.beginModel(
-            len(self.collision_mesh.vertices), len(self.collision_mesh.faces)
-        )
-        bvh.addSubModel(self.collision_mesh.vertices, self.collision_mesh.faces)
-        bvh.endModel()
-        return bvh
+        if (
+            len(self.collision_mesh.vertices) == 0
+            or len(self.collision_mesh.faces) == 0
+        ):
+            logger.warning(
+                "Dummy MeshShape with no vertices or faces has been created. "
+                "You should not use this for collision checking."
+            )
+
+        with open(os.devnull, "w") as devnull:
+            with redirect_stdout(devnull), redirect_stderr(devnull):
+                bvh = fcl.BVHModel()
+                bvh.beginModel(
+                    len(self.collision_mesh.vertices), len(self.collision_mesh.faces)
+                )
+                bvh.addSubModel(self.collision_mesh.vertices, self.collision_mesh.faces)
+                bvh.endModel()
+                return bvh
 
     def transformed_collision_mesh(
         self, transform: Transform | None = None
