@@ -44,10 +44,10 @@ def calc_limit_from_current_state(
     if step == 0:
         raise ValueError("Step size cannot be zero.")
     # copy MoveManager to avoid modifying the original state
-    cm_temp = cm.copy()
-    mm_temp = cm_temp.mm
+    joint_value_map = cm.mm.joint_values_map.copy()
+
     # store initial joint value
-    previous_value = mm_temp.joint_value(joint_name)
+    previous_value = cm.mm.joint_value(joint_name)
     logger.debug(f"Starting joint {joint_name} at value {previous_value}")
 
     is_collide = False
@@ -55,7 +55,7 @@ def calc_limit_from_current_state(
 
     while not is_collide:
         # expensive distance calculation
-        safe_distance = cm_temp.distance(link_names1, link_names2).min_distance
+        safe_distance = cm.distance(link_names1, link_names2).min_distance
 
         # consider collision tolerance
         safe_distance = safe_distance - collision_tolerance
@@ -74,10 +74,10 @@ def calc_limit_from_current_state(
             elif step < 0:
                 next_step = min(step, -safe_distance * 0.9999999)
         # store previous value
-        previous_value = mm_temp.joint_value(joint_name)
+        previous_value = cm.mm.joint_value(joint_name)
         # update joint state
         try:
-            mm_temp.move(joint_name, previous_value + next_step)
+            cm.mm.move(joint_name, previous_value + next_step)
             logger.debug(
                 f"Joint {joint_name} moved to {previous_value + next_step} (step: {next_step})"
             )
@@ -85,14 +85,17 @@ def calc_limit_from_current_state(
         except JointLimitError as e:
             logger.info(f"Reached joint limit for {joint_name} at value {e.value}")
             return (
-                mm_temp.robot.joint(joint_name).max
+                cm.mm.robot.joint(joint_name).max
                 if step > 0
-                else mm_temp.robot.joint(joint_name).min
+                else cm.mm.robot.joint(joint_name).min
             )
 
         # avoid infinite loop
         if try_count > max_try:
             raise RuntimeError("Exceeded maximum number of tries.")
         try_count += 1
+
+    for joint_name, joint_value in joint_value_map.items():
+        cm.mm.move(joint_name, joint_value)
 
     raise RuntimeError("Unreachable code reached while checking joint limits.")
