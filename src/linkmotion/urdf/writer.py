@@ -682,10 +682,13 @@ class UrdfWriter:
         Returns:
             Origin XML element or None if transform is identity.
         """
-        if transform.is_identity():
-            return None
-
         origin_elem = ET.Element("origin")
+
+        # If the transform is identity, return with zero attributes
+        if transform.is_identity():
+            origin_elem.set("rpy", "0 0 0")
+            origin_elem.set("xyz", "0 0 0")
+            return origin_elem
 
         # Add translation
         translation = transform.position
@@ -702,7 +705,11 @@ class UrdfWriter:
         # Only return the element if it has attributes
         if origin_elem.attrib:
             return origin_elem
-        return None
+
+        # If no attributes were added, return identity
+        origin_elem.set("rpy", "0 0 0")
+        origin_elem.set("xyz", "0 0 0")
+        return origin_elem
 
     def _create_joint_element(
         self,
