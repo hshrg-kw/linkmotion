@@ -673,7 +673,7 @@ class UrdfWriter:
 
     def _create_origin_element_from_transform(
         self, transform: Transform
-    ) -> Optional[ET.Element]:
+    ) -> ET.Element:
         """Create an origin XML element from a Transform object.
 
         Args:
@@ -740,9 +740,13 @@ class UrdfWriter:
         # Add origin using the computed relative transform
         if relative_transform is not None and not relative_transform.is_identity():
             origin_elem = self._create_origin_element_from_transform(relative_transform)
-            if origin_elem is not None:
-                joint_elem.append(origin_elem)
-
+            joint_elem.append(origin_elem)
+        else:
+            # If no relative transform, add identity origin
+            origin_elem = ET.Element("origin")
+            origin_elem.set("rpy", "0 0 0")
+            origin_elem.set("xyz", "0 0 0")
+            joint_elem.append(origin_elem)
         # Add axis for non-fixed joints using the computed relative axis
         if joint.type != JointType.FIXED and relative_axis is not None:
             axis_elem = ET.SubElement(joint_elem, "axis")
