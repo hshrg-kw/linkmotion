@@ -2,8 +2,10 @@ import trimesh
 import fcl
 import logging
 import os
+import sys
 
-from wurlitzer import Wurlitzer
+if sys.platform != "win32":
+    from wurlitzer import Wurlitzer
 
 from linkmotion.robot.shape.base import ShapeBase
 from linkmotion.transform import Transform
@@ -116,15 +118,23 @@ class MeshShape(ShapeBase):
                 "You should not use this for collision checking."
             )
 
-        with open(os.devnull, "w") as devnull:
-            with Wurlitzer(stdout=devnull, stderr=devnull):
-                bvh = fcl.BVHModel()
-                bvh.beginModel(
-                    len(self.collision_mesh.vertices), len(self.collision_mesh.faces)
-                )
-                bvh.addSubModel(self.collision_mesh.vertices, self.collision_mesh.faces)
-                bvh.endModel()
-                return bvh
+        def create_bvh_model():
+            bvh = fcl.BVHModel()
+            bvh.beginModel(
+                len(self.collision_mesh.vertices), len(self.collision_mesh.faces)
+            )
+            bvh.addSubModel(self.collision_mesh.vertices, self.collision_mesh.faces)
+            bvh.endModel()
+            return bvh
+
+        # When Windows ('win32'), Wurlitzer is not used and executed directly
+        if sys.platform == "win32":
+            return create_bvh_model()
+        # On non-Windows, Wurlitzer is used to suppress C library output
+        else:
+            with open(os.devnull, "w") as devnull:
+                with Wurlitzer(stdout=devnull, stderr=devnull):
+                    return create_bvh_model()
 
     def transformed_collision_mesh(
         self, transform: Transform | None = None
