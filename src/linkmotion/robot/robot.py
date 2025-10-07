@@ -713,7 +713,7 @@ class Robot:
             # validation
             if not isinstance(shape, MeshShape):
                 raise ValueError(f"Link '{link_name}' does not have a MeshShape.")
-            collision_meshes.append(shape.collision_mesh)
+            collision_meshes.append(shape.transformed_collision_mesh())
 
         # Combine the collision meshes into a single mesh
         combined_mesh: trimesh.Trimesh = trimesh.util.concatenate(collision_meshes)
