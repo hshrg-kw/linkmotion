@@ -163,7 +163,7 @@ class ShapeBase(ABC):
         )
         # Create an FCL CollisionObject with the geometry and the combined transform
         return combined_transform.apply(self.collision_primitive)
-    
+
     def reconstruct_collision_primitive(self):
         """Recreates the collision primitive from the shape's parameters.
 
