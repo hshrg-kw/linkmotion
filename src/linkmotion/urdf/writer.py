@@ -671,9 +671,7 @@ class UrdfWriter:
             return origin_elem
         return None
 
-    def _create_origin_element_from_transform(
-        self, transform: Transform
-    ) -> ET.Element:
+    def _create_origin_element_from_transform(self, transform: Transform) -> ET.Element:
         """Create an origin XML element from a Transform object.
 
         Args:
