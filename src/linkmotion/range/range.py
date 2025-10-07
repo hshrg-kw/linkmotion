@@ -13,7 +13,6 @@ from linkmotion.robot.robot import Robot
 from linkmotion.collision.manager import CollisionManager
 from linkmotion.move.manager import MoveManager
 from linkmotion.robot.joint import JointType, Joint
-from linkmotion.visual.range import plot_2d, plot_3d
 
 logger = logging.getLogger(__name__)
 
@@ -431,6 +430,8 @@ class RangeCalculator:
         return instance
 
     def plot(self):
+        from linkmotion.visual.range import plot_2d, plot_3d
+
         if self.results is None:
             raise ValueError(
                 "Calculation results are not available. Run execute() first."
