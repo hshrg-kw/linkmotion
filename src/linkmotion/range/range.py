@@ -286,7 +286,7 @@ class RangeCalculator:
         logger.info(f"Reshaping results into array with shape: {result_shape}")
         return np.array(flat_results, dtype=np.float64).reshape(result_shape)
 
-    def execute(self) -> None:
+    def execute(self, with_progress_info_log: bool = False) -> None:
         """Execute range calculation across all defined axes.
 
         Performs collision detection for all combinations of survey points
@@ -315,8 +315,12 @@ class RangeCalculator:
         start_time = time.time()
 
         grid_points = self._generate_grid_points()
-        flat_results = self._compute_parallel_with_progress(grid_points, total_points)
-        # flat_results = self._compute_parallel(grid_points)
+        if with_progress_info_log:
+            flat_results = self._compute_parallel_with_progress(
+                grid_points, total_points
+            )
+        else:
+            flat_results = self._compute_parallel(grid_points)
         self.results = self._reshape_results(flat_results)
 
         end_time = time.time()
