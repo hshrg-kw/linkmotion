@@ -716,11 +716,12 @@ class Robot:
             collision_meshes.append(shape.collision_mesh)
 
         # Combine the collision meshes into a single mesh
-        combined_mesh = trimesh.util.concatenate(collision_meshes)
+        combined_mesh: trimesh.Trimesh = trimesh.util.concatenate(collision_meshes)
         # Update the representative link with the new combined mesh
         representative_shape = self.link(representative_link_name).shape
         if isinstance(representative_shape, MeshShape):
             representative_shape.collision_mesh = combined_mesh
+            representative_shape.visual_mesh = combined_mesh.copy()
 
         logger.info(
             f"Aggregated collision meshes of {len(link_names_to_aggregate)} links into '{representative_link_name}'."
