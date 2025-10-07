@@ -40,7 +40,7 @@ class CollisionVisualizer:
             )
             points = np.array(distance_result.nearest_points).reshape(-1, 3)
             plot = BasicVisualizer.points(points, plot=plot, point_size=point_size)
-            plot += k3d.line(points, color=color, width=width)
+            plot += k3d.line(np.ascontiguousarray(points, np.float32), color=color, width=width)
             logger.info(
                 f"minimum distance is {distance_result.min_distance} at {points}."
             )
