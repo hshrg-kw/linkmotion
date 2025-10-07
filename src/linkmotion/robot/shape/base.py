@@ -163,6 +163,21 @@ class ShapeBase(ABC):
         )
         # Create an FCL CollisionObject with the geometry and the combined transform
         return combined_transform.apply(self.collision_primitive)
+    
+    def reconstruct_collision_primitive(self):
+        """Recreates the collision primitive from the shape's parameters.
+
+        This method can be used to refresh the collision primitive if the
+        shape's defining parameters have changed.
+
+        Raises:
+            RuntimeError: If the collision primitive cannot be recreated.
+        """
+        try:
+            self.collision_primitive = self.create_collision_primitive()
+        except Exception as e:
+            logger.error(f"Failed to recreate collision primitive: {e}")
+            raise RuntimeError("Could not recreate collision primitive.") from e
 
     @staticmethod
     def _apply_color_to_mesh(mesh: trimesh.Trimesh, color: RGBA0to1) -> trimesh.Trimesh:
