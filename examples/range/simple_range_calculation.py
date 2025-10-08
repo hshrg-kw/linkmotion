@@ -12,7 +12,7 @@ import numpy as np
 from linkmotion.robot.robot import Robot
 from linkmotion.robot.link import Link
 from linkmotion.robot.joint import Joint, JointType
-from linkmotion.range.range import RangeCalculator
+from linkmotion.range.range_cal import RangeCalculator
 
 # Configure logging to see calculation progress
 logging.basicConfig(
