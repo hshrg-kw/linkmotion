@@ -9,23 +9,27 @@ logger = logging.getLogger(__name__)
 
 
 class RangeReader:
-    """A class to read and manage range data with optimized interpolation, which puts importance on performance.
+    """Read and manage range data with optimized interpolation.
 
-    for example, when axis_names = ('x', 'y', 'z'),
-    results[2, 4, 1] gives the result
-    at (x, y, z) = (axis_points[0][2], axis_points[1][4], axis_points[2][1])
+    This class provides high-performance interpolation for multi-dimensional range data,
+    prioritizing speed through pre-computed bounds and scipy's RegularGridInterpolator.
 
-    Note:
-        All axis_points arrays must be sorted in ascending order for binary search operations.
+    Example:
+        When axis_names = ('x', 'y', 'z'), results[2, 4, 1] gives the result at
+        (x, y, z) = (axis_points[0][2], axis_points[1][4], axis_points[2][1])
 
     Args:
         results: A numpy array containing the calculation results.
         axis_names: A tuple of strings representing the names of the axes.
-        axis_points: A tuple of numpy 1D arrays where each element corresponds to the survey grid points for an axis.
-            Each array must be sorted in ascending order.
+        axis_points: A tuple of numpy 1D arrays where each element corresponds to the
+            survey grid points for an axis. Each array must be sorted in ascending order.
 
     Raises:
-        ValueError: If dimensions mismatch between results, axis_names, and axis_points.
+        ValueError: If dimensions mismatch between results, axis_names, and axis_points,
+            or if axis_points arrays are not sorted in ascending order.
+
+    Note:
+        All axis_points arrays must be sorted in ascending order for binary search operations.
     """
 
     def __init__(
@@ -93,13 +97,46 @@ class RangeReader:
             f"grid_sizes={self._grid_sizes.tolist()})"
         )
 
+    def is_calculable(self, *points: float) -> bool:
+        """Check if the points can be used for calculations.
+
+        Points are calculable if the number of coordinates matches the dimensionality
+        of the range data and all coordinates are within bounds.
+
+        Args:
+            *points: Coordinates to check.
+
+        Returns:
+            True if the length matches dimensionality and points are within bounds,
+            False otherwise.
+        """
+        return len(points) == self.n_dims and not self.is_out(*points)
+
+    def is_valid(self, *points: float) -> bool:
+        """Check if the given points are valid.
+
+        In the default implementation, points are valid if they are within bounds
+        and have an interpolated value of 0.0 (collision-free).
+
+        Note:
+            Override this method to customize the definition of "valid" for your use case.
+
+        Args:
+            *points: Coordinates to check.
+
+        Returns:
+            True if points are within bounds and interpolated value is 0.0, False otherwise.
+        """
+        return not self.is_out(*points) and self.interpolate(*points) == 0.0
+
     def is_out(self, *points: float) -> np.bool_:
         """Check if the given points are out of the defined bounds.
 
         Args:
-            *points: A variable number of float arguments representing the points to check.
+            *points: Coordinates to check.
+
         Returns:
-            np.bool_: True if any point is out of bounds, False otherwise.
+            True if any coordinate is out of bounds, False otherwise.
         """
         pts = np.array(points, dtype=np.float64)
         return np.any(pts < self._min_bounds) | np.any(pts > self._max_bounds)
@@ -128,11 +165,11 @@ class RangeReader:
         """Find the lower and upper cell indices for interpolation.
 
         Args:
-            *points: A variable number of float arguments representing the coordinates to find cell indices for.
+            *points: Coordinates to find cell indices for.
 
         Returns:
-            lower_indices: Array of lower indices for each dimension
-            upper_indices: Array of upper indices for each dimension
+            Tuple of (lower_indices, upper_indices) where each is an array of indices
+            for each dimension.
         """
         pts = np.array(points, dtype=np.float64)
 
@@ -152,13 +189,16 @@ class RangeReader:
     def get_corner_values(
         self, *points: float
     ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
-        """Get the values of all corner neighbors in a multi-dimension grid for the given points.
+        """Get the values of all corner neighbors in the grid cell enclosing the given points.
 
         Args:
-            *points: A variable number of float arguments representing the coordinates to query.
+            *points: Coordinates to query.
 
         Returns:
             Array of shape (2^n_dims,) containing values at all corners of the enclosing cell.
+
+        Raises:
+            ValueError: If the point is out of bounds.
         """
         if self.is_out(*points):
             raise ValueError("Point is out of bounds. Extrapolation is not allowed.")
@@ -182,35 +222,44 @@ class RangeReader:
         return corner_values
 
     def get_corner_max_value(self, *points: float) -> float:
-        """Get the max value of the corner neighbors in a multi-dimension grid for the given points.
+        """Get the maximum value among corner neighbors in the grid cell enclosing the given points.
 
         Args:
-            *points: A variable number of float arguments representing the coordinates to query.
+            *points: Coordinates to query.
 
         Returns:
             Maximum value among all corners of the enclosing cell.
+
+        Raises:
+            ValueError: If the point is out of bounds.
         """
         return np.max(self.get_corner_values(*points))
 
     def get_corner_min_value(self, *points: float) -> float:
-        """Get the min value of the corner neighbors in a multi-dimension grid for the given points.
+        """Get the minimum value among corner neighbors in the grid cell enclosing the given points.
 
         Args:
-            *points: A variable number of float arguments representing the coordinates to query.
+            *points: Coordinates to query.
 
         Returns:
             Minimum value among all corners of the enclosing cell.
+
+        Raises:
+            ValueError: If the point is out of bounds.
         """
         return np.min(self.get_corner_values(*points))
 
     def get_nearest_value(self, *points: float) -> float:
-        """Get the value of the nearest neighbor in a multi-dimension grid for the given points.
+        """Get the value at the nearest grid point to the given coordinates.
 
         Args:
-            *points: A variable number of float arguments representing the coordinates to query.
+            *points: Coordinates to query.
 
         Returns:
             Value at the nearest grid point.
+
+        Raises:
+            ValueError: If the point is out of bounds.
         """
         if self.is_out(*points):
             raise ValueError("Point is out of bounds. Extrapolation is not allowed.")
@@ -241,6 +290,15 @@ class RangeReader:
         """Interpolate the value at the given points using multi-linear interpolation.
 
         Uses scipy's RegularGridInterpolator for accurate and fast interpolation.
+
+        Args:
+            *points: Coordinates to interpolate at.
+
+        Returns:
+            Interpolated value.
+
+        Raises:
+            ValueError: If the point is out of bounds.
         """
         if self.is_out(*points):
             raise ValueError("Point is out of bounds. Extrapolation is not allowed.")
@@ -255,10 +313,13 @@ class RangeReader:
         """Batch interpolation for multiple points.
 
         Args:
-            points_array: Array of shape (n_points, n_dims)
+            points_array: Array of shape (n_points, n_dims) where each row is a point.
 
         Returns:
-            Array of shape (n_points,) with interpolated values
+            Array of shape (n_points,) with interpolated values.
+
+        Raises:
+            ValueError: If any points are out of bounds.
         """
         out_of_bounds = self.is_out_batch(points_array)
         if np.any(out_of_bounds):
@@ -313,7 +374,7 @@ class RangeReader:
         logger.info("Successfully imported and reconstructed calculation results.")
         return instance
 
-    def plot(self):
+    def plot(self) -> None:
         """Plot the range data using 2D or 3D visualization.
 
         Raises:
@@ -349,32 +410,3 @@ class RangeReader:
             raise NotImplementedError(
                 "Plotting is only implemented for 2D and 3D data."
             )
-
-
-# Example usage and performance test
-if __name__ == "__main__":
-    # Create sample data
-    x = np.linspace(0, 10, 20)
-    y = np.linspace(0, 5, 15)
-    z = np.linspace(0, 3, 10)
-
-    # Create 3D grid
-    X, Y, Z = np.meshgrid(x, y, z, indexing="ij")
-    results = np.sin(X) * np.cos(Y) * Z
-
-    reader = RangeReader(results, ("x", "y", "z"), (x, y, z))
-
-    # Test single point
-    test_point = (5.5, 2.3, 1.7)
-    print(f"Test point: {test_point}")
-    print(f"Is out: {reader.is_out(*test_point)}")
-    print(f"Nearest value: {reader.get_nearest_value(*test_point):.6f}")
-    print(f"Interpolated value: {reader.interpolate(*test_point):.6f}")
-    print(f"Corner max: {reader.get_corner_max_value(*test_point):.6f}")
-    print(f"Corner min: {reader.get_corner_min_value(*test_point):.6f}")
-
-    # Test batch processing
-    test_points = np.random.uniform([0, 0, 0], [10, 5, 3], size=(1000, 3))
-    interpolated = reader.interpolate_batch(test_points)
-    print(f"\nBatch interpolation of {len(test_points)} points completed")
-    print(f"Mean interpolated value: {np.mean(interpolated):.6f}")
