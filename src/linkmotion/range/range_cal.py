@@ -3,11 +3,13 @@ import time
 import logging
 from pathlib import Path
 from itertools import product
-from typing import Dict, Optional, Iterable, Any, cast
+from typing import Dict, Optional, Iterable
+from multiprocessing import Pool
 
+import psutil
 import numpy as np
 import numpy.typing as npt
-from joblib import Parallel, delayed
+from tqdm import tqdm
 
 from linkmotion.robot.robot import Robot
 from linkmotion.collision.manager import CollisionManager
@@ -65,6 +67,31 @@ class RangeCalcCondition:
             The joint's name identifier.
         """
         return self.joint.name
+
+
+_worker_instance: Optional["RangeCalculator"] = None
+"""
+Global variable to hold the instance for multi-process worker processes
+"""
+
+
+def _worker_init(instance: "RangeCalculator"):
+    """
+    Store the instance in a global variable for worker processes to access
+    """
+    global _worker_instance
+    _worker_instance = instance
+
+
+def _calculate_single_point_worker(point):
+    """
+    Define the parallel processing calculation logic as a top-level function
+    This function uses the instance stored in the global variable to perform the calculation for a single point
+    """
+    # Access necessary methods and data through _worker_instance
+    if _worker_instance is None:
+        raise RuntimeError("Worker instance is not initialized.")
+    return _worker_instance._calculate_single_point(point)
 
 
 class RangeCalculator:
@@ -188,7 +215,9 @@ class RangeCalculator:
             )
         return product(*axis_points)
 
-    def _compute_parallel(self, grid_points: product) -> Iterable[float]:
+    def _compute_parallel(
+        self, grid_points: product, process_num: int | None = None
+    ) -> Iterable[float]:
         """Perform parallel collision detection across all grid points.
 
         Args:
@@ -197,76 +226,55 @@ class RangeCalculator:
         Returns:
             Flat list of collision results (1.0 for collision, 0.0 for no collision).
         """
-        cpu_count = os.cpu_count() or 1
-        logger.info(f"Starting parallel execution on {cpu_count} cores...")
+        if process_num is None:
+            # get physical CPU core count
+            process_num = psutil.cpu_count(logical=False) or 1
+            logger.info(f"Found {process_num} physical cpu cores.")
 
-        flat_results: Iterable[Any] = Parallel(n_jobs=-1)(
-            delayed(self._calculate_single_point)(point) for point in grid_points
-        )
-        result: Iterable[float] = cast(Iterable[float], flat_results)
+        logger.info(f"Starting parallel execution on {process_num} processes...")
+
+        # set empirical chunk size
+        points_list = list(grid_points)
+        total_tasks = len(points_list)
+        chunksize, remainder = divmod(total_tasks, process_num * 4)
+        if remainder:
+            chunksize += 1
+
+        result = list[float]()
+        with Pool(
+            processes=process_num, initializer=_worker_init, initargs=(self,)
+        ) as pool:
+            imap_result = pool.imap(
+                _calculate_single_point_worker, points_list, chunksize
+            )
+            result = list(
+                tqdm(
+                    imap_result,
+                    total=total_tasks,
+                    desc="Calculating Range (Parallel)",
+                    unit=" point",
+                )
+            )
+
         logger.info("Parallel execution finished.")
         return result
 
-    def _compute_parallel_with_progress(
-        self, grid_points: product, total_points: int
-    ) -> Iterable[float]:
-        """Perform parallel collision detection with progress logging.
+    def _compute_serial(self, grid_points: product) -> Iterable[float]:
+        """Perform serial collision detection across all grid points.
 
         Args:
             grid_points: Iterator of joint value combinations to evaluate.
-            total_points: Total number of points to process for progress calculation.
 
         Returns:
             Flat list of collision results (1.0 for collision, 0.0 for no collision).
         """
-        cpu_count = os.cpu_count() or 1
-        logger.info(f"Starting parallel execution on {cpu_count} cores...")
-
-        # Convert iterator to list for batch processing with progress tracking
         points_list = list(grid_points)
-
-        # Determine batch size for progress updates (aim for ~10 progress updates)
-        min_batch_size = max(1, total_points // 20)  # At most 20 updates
-        max_batch_size = max(min_batch_size, 100)  # At least 100 points per batch
-        batch_size = min(max_batch_size, total_points)
-
-        logger.info(f"Processing {total_points:,} points in batches of {batch_size:,}")
-
-        all_results = []
-        processed_count = 0
-        start_time = time.time()
-
-        # Process in batches to show progress
-        for i in range(0, len(points_list), batch_size):
-            batch = points_list[i : i + batch_size]
-
-            # Process current batch
-            batch_results: Iterable[Any] = Parallel(n_jobs=-1)(
-                delayed(self._calculate_single_point)(point) for point in batch
+        return [
+            self._calculate_single_point(point)
+            for point in tqdm(
+                points_list, desc="Calculating Range (Serial)", unit=" point"
             )
-
-            all_results.extend(cast(Iterable[float], batch_results))
-            processed_count += len(batch)
-
-            # Log progress
-            progress_pct = (processed_count / total_points) * 100
-            elapsed = time.time() - start_time
-
-            if elapsed > 0:
-                rate = processed_count / elapsed
-                remaining_points = total_points - processed_count
-                eta_seconds = remaining_points / rate if rate > 0 else 0
-                eta_str = f", ETA: {eta_seconds:.1f}s" if eta_seconds > 0 else ""
-            else:
-                eta_str = ""
-
-            logger.info(
-                f"Progress: {processed_count:,}/{total_points:,} "
-                f"({progress_pct:.1f}%){eta_str}"
-            )
-
-        logger.info("Parallel execution finished.")
-        return all_results
+        ]
 
     def _reshape_results(
         self, flat_results: Iterable[float]
@@ -285,7 +293,7 @@ class RangeCalculator:
         logger.info(f"Reshaping results into array with shape: {result_shape}")
         return np.array(flat_results, dtype=np.float64).reshape(result_shape)
 
-    def execute(self, with_progress_info_log: bool = False) -> None:
+    def execute(self, process_num: int | None = None) -> None:
         """Execute range calculation across all defined axes.
 
         Performs collision detection for all combinations of survey points
@@ -314,25 +322,18 @@ class RangeCalculator:
         start_time = time.time()
 
         grid_points = self._generate_grid_points()
-        if with_progress_info_log:
-            flat_results = self._compute_parallel_with_progress(
-                grid_points, total_points
-            )
+        if process_num == 1:
+            logger.info("Process number set to 1, running in serial mode.")
+            flat_results = self._compute_serial(grid_points)
         else:
-            flat_results = self._compute_parallel(grid_points)
+            flat_results = self._compute_parallel(grid_points, process_num)
+
         self.results = self._reshape_results(flat_results)
 
         end_time = time.time()
         elapsed_time = end_time - start_time
 
-        collision_count = np.sum(self.results)
-        collision_percentage = (collision_count / total_points) * 100
-
-        logger.info(
-            f"Range calculation complete: {collision_count:.0f}/{total_points} "
-            f"points have collisions ({collision_percentage:.1f}%) "
-            f"[Duration: {elapsed_time:.2f}s]"
-        )
+        logger.info(f"Range calculation complete [Duration: {elapsed_time:.2f}s]")
 
     def export(self, file_path: Path) -> None:
         """Exports the calculation results to a compressed NumPy file.
