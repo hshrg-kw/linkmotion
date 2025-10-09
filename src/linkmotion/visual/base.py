@@ -42,7 +42,7 @@ def _get_or_create_plot(plot: k3d.Plot | None) -> k3d.Plot:
         An existing or newly created k3d.Plot object.
     """
     if plot is None:
-        logger.info("No k3d.Plot provided, creating a new one.")
+        logger.debug("No k3d.Plot provided, creating a new one.")
         return k3d.plot()
     return plot
 

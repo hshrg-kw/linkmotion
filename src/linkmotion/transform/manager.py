@@ -123,7 +123,7 @@ class TransformManager:
         # New nodes are initially dirty and need their world transform calculated.
         self.dirty_nodes.add(node_id)
 
-        logger.info(f"Node {node_id} added to transform hierarchy")
+        logger.debug(f"Node {node_id} added to transform hierarchy")
 
     def set_local_transform(self, node_id: int, transform: Transform):
         """Sets the local transform for a given node.
@@ -237,7 +237,7 @@ class TransformManager:
         the reset operations.
         """
         node_count = len(self.default_local_transforms)
-        logger.info(f"Resetting {node_count} transforms to defaults")
+        logger.debug(f"Resetting {node_count} transforms to defaults")
 
         # Reset all local transforms to their defaults
         for node_id, default_transform in self.default_local_transforms.items():
@@ -290,7 +290,7 @@ class TransformManager:
             nodes_to_remove.append(current_id)
             nodes_to_visit.extend(self.children_map.get(current_id, set()))
 
-        logger.info(
+        logger.debug(
             f"Removing node {node_id} and {len(nodes_to_remove) - 1} descendants"
         )
 

@@ -112,7 +112,7 @@ class UrdfParser:
         self._apply_kinematic_transforms(robot, joint_elements, materials)
 
         robot_name = robot_elem.get("name", "unnamed_robot")
-        logger.info(
+        logger.debug(
             f"Parsed URDF robot '{robot_name}' with {len(robot.links())} links and {len(robot._joint_dict)} joints"
         )
 

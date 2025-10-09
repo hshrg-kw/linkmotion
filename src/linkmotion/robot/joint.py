@@ -85,7 +85,7 @@ class Joint:
             logger.error(err_msg)
             raise ValueError(err_msg)
 
-        logger.info(f"Joint '{self.name}' created.")
+        logger.debug(f"Joint '{self.name}' created.")
 
     def __str__(self) -> str:
         """Returns a string representation of the joint."""

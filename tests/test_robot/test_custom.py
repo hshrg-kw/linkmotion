@@ -93,7 +93,7 @@ class TestCollisionMeshCustomizer:
         min_corner = np.array([-1, -1, -1])
         max_corner = np.array([1, 1, 1])
 
-        with caplog.at_level(logging.INFO):
+        with caplog.at_level(logging.DEBUG):
             CollisionMeshCustomizer.remove_outside_of_box(
                 robot_with_mesh_links, {"non_mesh_link"}, min_corner, max_corner
             )
@@ -127,7 +127,7 @@ class TestCollisionMeshCustomizer:
         initial_translate = np.array([0, 0, 0])
         sweep_translate = np.array([1, 1, 1])
 
-        with caplog.at_level(logging.INFO):
+        with caplog.at_level(logging.DEBUG):
             CollisionMeshCustomizer.sweep_mesh(
                 robot_with_mesh_links,
                 {"non_mesh_link"},
@@ -177,7 +177,7 @@ class TestCollisionMeshCustomizer:
         initial_angle = 0.0
         how_many_to_add = 1
 
-        with caplog.at_level(logging.INFO):
+        with caplog.at_level(logging.DEBUG):
             CollisionMeshCustomizer.rotate_overlap(
                 robot_with_mesh_links,
                 {"non_mesh_link"},
@@ -208,7 +208,7 @@ class TestCollisionMeshCustomizer:
         self, robot_with_mesh_links, caplog
     ):
         """Test that non-mesh links are skipped during primitive conversion."""
-        with caplog.at_level(logging.INFO):
+        with caplog.at_level(logging.DEBUG):
             CollisionMeshCustomizer.from_mesh_to_bounding_primitive(
                 robot_with_mesh_links, {"non_mesh_link"}
             )

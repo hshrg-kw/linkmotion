@@ -69,7 +69,7 @@ class Robot:
             logger.error(err_msg)
             raise ValueError(err_msg)
         self._link_dict[link.name] = link
-        logger.info(f"Added link: '{link.name}'")
+        logger.debug(f"Added link: '{link.name}'")
 
     def add_joint(self, joint: Joint):
         """Adds a joint to the robot model, connecting two existing links.
@@ -102,7 +102,7 @@ class Robot:
         # Update caches to maintain data integrity for fast lookups.
         self._child_link_to_parent_joint[joint.child_link_name] = joint.name
         self._parent_link_to_child_joints[joint.parent_link_name].add(joint.name)
-        logger.info(
+        logger.debug(
             f"Added joint: '{joint.name}' connecting '{joint.parent_link_name}' -> '{joint.child_link_name}'"
         )
 
@@ -287,7 +287,7 @@ class Robot:
         new_robot._parent_link_to_child_joints = defaultdict[str, set[str]](set)
         for k, v in other._parent_link_to_child_joints.items():
             new_robot._parent_link_to_child_joints[k] = v.copy()
-        logger.info("Created a deep copy of a Robot instance.")
+        logger.debug("Created a deep copy of a Robot instance.")
         return new_robot
 
     def traverse_child_links(
@@ -405,7 +405,7 @@ class Robot:
             if not self._parent_link_to_child_joints[parent_link_name]:
                 self._parent_link_to_child_joints.pop(parent_link_name)
 
-        logger.info(f"Removed joint: '{joint_name}'")
+        logger.debug(f"Removed joint: '{joint_name}'")
 
     def remove_link_with_descendants(self, link_name: str):
         """Removes a link and all its descendant links and associated joints.
@@ -443,7 +443,7 @@ class Robot:
             self._child_link_to_parent_joint.pop(link_name_to_remove, None)
             self._parent_link_to_child_joints.pop(link_name_to_remove, None)
 
-        logger.info(
+        logger.debug(
             f"Removed link '{link_name}' and its {len(descendant_links) - 1} descendant links."
         )
 
@@ -484,7 +484,7 @@ class Robot:
                 self.joint(joint_name).parent_link_name = new_name
             self._parent_link_to_child_joints[new_name] = child_joint_names
 
-        logger.info(
+        logger.debug(
             f"Renamed link '{old_name}' to '{new_name}' and updated all connections."
         )
 
@@ -568,7 +568,7 @@ class Robot:
         self.add_link(child_link)
         self.add_joint(new_joint)
 
-        logger.info(
+        logger.debug(
             f"Divided link '{link_name_to_be_divided}' into '{parent_link.name}' and '{child_link.name}'."
         )
 
@@ -634,7 +634,7 @@ class Robot:
             )
             self.add_joint(new_joint)
 
-        logger.info(
+        logger.debug(
             f"Solidified link '{link_name}' and {len(descendant_links) - 1} descendants into a single mesh."
         )
 
@@ -693,7 +693,7 @@ class Robot:
 
         # Add the connecting joint, which also updates the caches.
         self.add_joint(new_joint)
-        logger.info(
+        logger.debug(
             f"Successfully concatenated another robot, connecting via joint '{new_joint.name}'."
         )
 
@@ -723,7 +723,7 @@ class Robot:
             representative_shape.collision_mesh = combined_mesh
             representative_shape.visual_mesh = combined_mesh.copy()
 
-        logger.info(
+        logger.debug(
             f"Aggregated collision meshes of {len(link_names_to_aggregate)} links into '{representative_link_name}'."
         )
 

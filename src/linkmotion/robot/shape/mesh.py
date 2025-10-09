@@ -113,7 +113,7 @@ class MeshShape(ShapeBase):
             len(self.collision_mesh.vertices) == 0
             or len(self.collision_mesh.faces) == 0
         ):
-            logger.info(
+            logger.debug(
                 "Dummy MeshShape with no vertices or faces has been created. "
                 "You should not use this for collision checking."
             )

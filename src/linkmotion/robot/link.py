@@ -30,7 +30,7 @@ class Link:
         """
         self.name = name
         self.shape = shape
-        logger.info(f"Link '{self.name}' created.")
+        logger.debug(f"Link '{self.name}' created.")
 
     def __str__(self) -> str:
         """Returns a string representation of the link."""

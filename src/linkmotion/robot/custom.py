@@ -43,7 +43,7 @@ class CollisionMeshCustomizer:
             link = robot.link(link_name)
             shape = link.shape
             if not isinstance(shape, MeshShape):
-                logger.info(
+                logger.debug(
                     f"the remove_outside_of_box operation of Link {link_name} shape is skipped because it is not MeshShape"
                 )
                 continue
@@ -80,7 +80,7 @@ class CollisionMeshCustomizer:
             link = robot.link(link_name)
             shape = link.shape
             if not isinstance(shape, MeshShape):
-                logger.info(
+                logger.debug(
                     f"the sweep_mesh operation of Link {link_name} shape is skipped because it is not MeshShape"
                 )
                 continue
@@ -128,7 +128,7 @@ class CollisionMeshCustomizer:
 
             shape = link.shape
             if not isinstance(shape, MeshShape):
-                logger.info(
+                logger.debug(
                     f"the rotate_overlap operation of Link {link_name} shape is skipped because it is not MeshShape"
                 )
                 continue
@@ -136,7 +136,7 @@ class CollisionMeshCustomizer:
             old_collision_mesh = shape.collision_mesh
             old_visual_mesh = shape.visual_mesh
 
-            logger.info("rotating collision mesh")
+            logger.debug("rotating collision mesh")
             new_collision_mesh = rotate_overlap_trimesh(
                 old_collision_mesh,
                 center,
@@ -145,9 +145,9 @@ class CollisionMeshCustomizer:
                 initial_angle,
                 how_many_to_add,
             )
-            logger.info("completed rotating collision mesh")
+            logger.debug("completed rotating collision mesh")
 
-            logger.info("rotating visual mesh")
+            logger.debug("rotating visual mesh")
             new_visual_mesh = rotate_overlap_trimesh(
                 old_visual_mesh,
                 center,
@@ -156,7 +156,7 @@ class CollisionMeshCustomizer:
                 initial_angle,
                 how_many_to_add,
             )
-            logger.info("completed rotating visual mesh")
+            logger.debug("completed rotating visual mesh")
 
             link.shape = MeshShape(
                 collision_mesh=new_collision_mesh,
@@ -177,7 +177,7 @@ class CollisionMeshCustomizer:
             link = robot.link(link_name)
             shape = link.shape
             if not isinstance(shape, MeshShape):
-                logger.info(
+                logger.debug(
                     f"the from_mesh_to_bounding_primitive operation of Link {link_name} shape is skipped because it is not MeshShape"
                 )
                 continue

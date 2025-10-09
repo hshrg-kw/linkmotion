@@ -27,7 +27,7 @@ class CollisionManager:
         """
         self.mm = mm
         self.robot = mm.robot
-        logger.info("CollisionManager initialized.")
+        logger.debug("CollisionManager initialized.")
 
     def __repr__(self) -> str:
         """Returns a string representation of the CollisionManager.

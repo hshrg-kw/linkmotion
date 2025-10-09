@@ -72,7 +72,7 @@ class MoveManager:
             # Each node is initialized with a default identity transform.
             self.transform_manager.add_node(link_id, parent_id, Transform())
 
-        logger.info(
+        logger.debug(
             f"MoveManager initialized for robot with {len(self.link_name_to_id)} links."
         )
 
@@ -276,7 +276,7 @@ class MoveManager:
 
     def reset_move(self):
         """Resets all joint movements to their initial state (identity transform)."""
-        logger.info("Resetting all joint transforms.")
+        logger.debug("Resetting all joint transforms.")
         self.transform_manager.reset_all_transforms()
         self.joint_values_map.clear()
 

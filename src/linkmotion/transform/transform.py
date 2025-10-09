@@ -236,7 +236,7 @@ class Transform:
             case fcl.CollisionObject():
                 new_t = self.apply(obj.getTransform())
                 obj.setTransform(new_t)
-                logger.info(
+                logger.debug(
                     "side-effect: transform is applied and fcl.CollisionObject is modified in-place."
                 )
                 return None

@@ -346,7 +346,7 @@ class RangeReader:
         if not file_path.exists():
             raise FileNotFoundError(f"The file '{file_path}' was not found.")
 
-        logger.info(f"Importing calculation results from '{file_path}'...")
+        logger.debug(f"Importing calculation results from '{file_path}'...")
 
         # WARNING: allow_pickle=True can execute arbitrary code from untrusted files.
         # Only use with files from trusted sources. axis_points requires pickle as it is an array of arrays.
@@ -371,7 +371,7 @@ class RangeReader:
 
         instance = cls(results=results, axis_names=axis_names, axis_points=axis_points)
 
-        logger.info("Successfully imported and reconstructed calculation results.")
+        logger.debug("Successfully imported and reconstructed calculation results.")
         return instance
 
     def plot(self) -> None:

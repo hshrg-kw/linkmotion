@@ -180,7 +180,7 @@ class RangeCalculator:
             )
 
         self.calc_conditions[joint_name] = cond
-        logger.info(
+        logger.debug(
             f"Added axis '{joint_name}' with {len(survey_points)} survey points"
         )
 
@@ -229,9 +229,9 @@ class RangeCalculator:
         if process_num is None:
             # get physical CPU core count
             process_num = psutil.cpu_count(logical=False) or 1
-            logger.info(f"Found {process_num} physical cpu cores.")
+            logger.debug(f"Found {process_num} physical cpu cores.")
 
-        logger.info(f"Starting parallel execution on {process_num} processes...")
+        logger.debug(f"Starting parallel execution on {process_num} processes...")
 
         # set empirical chunk size
         points_list = list(grid_points)
@@ -256,7 +256,7 @@ class RangeCalculator:
                 )
             )
 
-        logger.info("Parallel execution finished.")
+        logger.debug("Parallel execution finished.")
         return result
 
     def _compute_serial(self, grid_points: product) -> Iterable[float]:
@@ -290,7 +290,7 @@ class RangeCalculator:
         axis_points = self.get_axis_points()
         result_shape = tuple(len(points) for points in axis_points)
 
-        logger.info(f"Reshaping results into array with shape: {result_shape}")
+        logger.debug(f"Reshaping results into array with shape: {result_shape}")
         return np.array(flat_results, dtype=np.float64).reshape(result_shape)
 
     def execute(self, process_num: int | None = None) -> None:
@@ -315,7 +315,7 @@ class RangeCalculator:
         logger.info(f"Starting range calculation with {len(self.calc_conditions)} axes")
         logger.info(f"Total combinations to evaluate: {total_points:,}")
         for i, (name, condition) in enumerate(self.calc_conditions.items()):
-            logger.info(
+            logger.debug(
                 f"  Axis {i + 1}: '{name}' with {len(condition.survey_points)} points"
             )
 
@@ -323,7 +323,7 @@ class RangeCalculator:
 
         grid_points = self._generate_grid_points()
         if process_num == 1:
-            logger.info("Process number set to 1, running in serial mode.")
+            logger.debug("Process number set to 1, running in serial mode.")
             flat_results = self._compute_serial(grid_points)
         else:
             flat_results = self._compute_parallel(grid_points, process_num)
@@ -352,7 +352,7 @@ class RangeCalculator:
                 "Calculation results are not available. Run execute() first."
             )
 
-        logger.info(f"Exporting calculation results to '{file_path}'...")
+        logger.debug(f"Exporting calculation results to '{file_path}'...")
         np.savez_compressed(
             file_path,
             results=self.results,
@@ -385,7 +385,7 @@ class RangeCalculator:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"The file '{file_path}' was not found.")
 
-        logger.info(f"Importing calculation results from '{file_path}'...")
+        logger.debug(f"Importing calculation results from '{file_path}'...")
 
         # allow_pickle=True is needed as axis_points is an array of arrays (object array).
         data = np.load(file_path, allow_pickle=True)
@@ -427,7 +427,7 @@ class RangeCalculator:
                 )
                 raise e
 
-        logger.info("Successfully imported and reconstructed calculation results.")
+        logger.debug("Successfully imported and reconstructed calculation results.")
         return instance
 
     def plot(self):

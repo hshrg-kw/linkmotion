@@ -121,7 +121,7 @@ class TestMoveManagerEdgeCases:
         robot.add_link(arm_link)
         robot.add_joint(joint)
 
-        with caplog.at_level("INFO"):
+        with caplog.at_level("DEBUG"):
             MoveManager(robot)
 
         assert "MoveManager initialized for robot with 2 links" in caplog.text
@@ -142,7 +142,7 @@ class TestMoveManagerEdgeCases:
         """Tests logging during reset operations."""
         manager, _ = simple_robot_and_manager
 
-        with caplog.at_level("INFO"):
+        with caplog.at_level("DEBUG"):
             manager.reset_move()
 
         assert "Resetting all joint transforms" in caplog.text

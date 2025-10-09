@@ -83,7 +83,7 @@ def calc_limit_from_current_state(
             )
         # stop if joint limit is reached
         except JointLimitError as e:
-            logger.info(f"Reached joint limit for {joint_name} at value {e.value}")
+            logger.debug(f"Reached joint limit for {joint_name} at value {e.value}")
             return (
                 cm.mm.robot.joint(joint_name).max
                 if step > 0

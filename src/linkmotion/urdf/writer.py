@@ -629,7 +629,7 @@ class UrdfWriter:
                     color=shape.color,
                 )
 
-                logger.info(
+                logger.debug(
                     f"Converted {type(shape).__name__} to mesh geometry: {filename}"
                 )
                 return mesh_shape

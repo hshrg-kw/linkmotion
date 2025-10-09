@@ -33,7 +33,7 @@ class CollisionVisualizer:
         if collision_result.is_collision:
             points = np.array(collision_result.contacts[0].pos).reshape(-1, 3)
             plot = BasicVisualizer.points(points, plot=plot, point_size=point_size)
-            logger.info(f"Collision detected at {points}.")
+            logger.debug(f"Collision detected at {points}.")
         else:
             distance_result = cm.distance(
                 link_names1, link_names2, enable_nearest_points=True
@@ -43,7 +43,7 @@ class CollisionVisualizer:
             plot += k3d.line(
                 np.ascontiguousarray(points, np.float32), color=color, width=width
             )
-            logger.info(
+            logger.debug(
                 f"minimum distance is {distance_result.min_distance} at {points}."
             )
         return plot
