@@ -231,7 +231,7 @@ class RangeCalculator:
             process_num = psutil.cpu_count(logical=False) or 1
             logger.debug(f"Found {process_num} physical cpu cores.")
 
-        logger.debug(f"Starting parallel execution on {process_num} processes...")
+        logger.info(f"Starting parallel execution on {process_num} processes")
 
         # set empirical chunk size
         points_list = list(grid_points)
@@ -240,23 +240,47 @@ class RangeCalculator:
         if remainder:
             chunksize += 1
 
+        logger.info(f"Processing {total_tasks:,} points with chunk size {chunksize}")
+
         result = list[float]()
+        start_time = time.time()
+
+        # Progress logging configuration
+        log_interval_percent = 2  # Log every 2%
+        next_log_threshold = log_interval_percent
+
         with Pool(
             processes=process_num, initializer=_worker_init, initargs=(self,)
         ) as pool:
             imap_result = pool.imap(
                 _calculate_single_point_worker, points_list, chunksize
             )
-            result = list(
+
+            for idx, value in enumerate(
                 tqdm(
                     imap_result,
                     total=total_tasks,
                     desc="Calculating Range (Parallel)",
                     unit=" point",
-                )
-            )
+                ),
+                start=1,
+            ):
+                result.append(value)
 
-        logger.debug("Parallel execution finished.")
+                # Log progress at regular intervals
+                progress_percent = (idx / total_tasks) * 100
+                if progress_percent >= next_log_threshold:
+                    elapsed = time.time() - start_time
+                    rate = idx / elapsed if elapsed > 0 else 0
+                    eta = (total_tasks - idx) / rate if rate > 0 else 0
+                    logger.info(
+                        f"Progress: {progress_percent:.0f}% ({idx:,}/{total_tasks:,} points) "
+                        f"[Elapsed: {elapsed:.1f}s, ETA: {eta:.1f}s, Rate: {rate:.1f} pts/s]"
+                    )
+                    next_log_threshold += log_interval_percent
+
+        elapsed_time = time.time() - start_time
+        logger.info(f"Parallel execution finished [Duration: {elapsed_time:.2f}s]")
         return result
 
     def _compute_serial(self, grid_points: product) -> Iterable[float]:
