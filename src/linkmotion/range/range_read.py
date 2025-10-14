@@ -374,39 +374,15 @@ class RangeReader:
         logger.debug("Successfully imported and reconstructed calculation results.")
         return instance
 
-    def plot(self) -> None:
-        """Plot the range data using 2D or 3D visualization.
+    def plot(self, **conditional_kwargs: int) -> None:
+        """Plot the range data using 2D or 3D visualization."""
+        from linkmotion.visual.range import plot_nd
 
-        Raises:
-            NotImplementedError: If data has more than 3 dimensions.
-        """
-        from linkmotion.visual.range import plot_2d, plot_3d
-
-        if len(self.axis_names) == 2:
-            axis_points = self.axis_points
-            labels = self.axis_names
-            plot_2d(
-                mesh_grid=self.results,  # pyright: ignore[reportArgumentType]
-                x_points=axis_points[0],
-                y_points=axis_points[1],
-                x_label=labels[0],
-                y_label=labels[1],
-            )
-
-        elif len(self.axis_names) == 3:
-            axis_points = self.axis_points
-            labels = self.axis_names
-            plot_3d(
-                mesh_grid=self.results,  # pyright: ignore[reportArgumentType]
-                x_points=axis_points[0],
-                y_points=axis_points[1],
-                time_points=axis_points[2],
-                x_label=labels[0],
-                y_label=labels[1],
-                time_label=labels[2],
-            )
-
-        else:
-            raise NotImplementedError(
-                "Plotting is only implemented for 2D and 3D data."
-            )
+        plot_nd(
+            mesh_grid=self.results,
+            points_array=self.axis_points,
+            axis_labels=self.axis_names,
+            title="Range Calculation Results",
+            axis_ranges=None,
+            **conditional_kwargs,
+        )

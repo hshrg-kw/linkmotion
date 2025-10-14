@@ -287,7 +287,7 @@ class TestRangeCalculator:
 
         names = calculator.get_axis_names()
 
-        assert names == []
+        assert names == ()
 
     def test_get_axis_names_with_axes(self, simple_robot):
         """Test get_axis_names with axes added."""
@@ -310,7 +310,7 @@ class TestRangeCalculator:
 
         points = calculator.get_axis_points()
 
-        assert points == []
+        assert points == ()
 
     def test_get_axis_points_with_axes(self, simple_robot):
         """Test get_axis_points with axes added."""

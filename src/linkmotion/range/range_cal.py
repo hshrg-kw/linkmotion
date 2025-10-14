@@ -122,21 +122,21 @@ class RangeCalculator:
             f"computed={self.results is not None})"
         )
 
-    def get_axis_names(self) -> list[str]:
-        """Get ordered list of joint names for calculation axes.
+    def get_axis_names(self) -> tuple[str, ...]:
+        """Get ordered tuple of joint names for calculation axes.
 
         Returns:
-            List of joint names in the order they were added.
+            Tuple of joint names in the order they were added.
         """
-        return [cond.joint_name for cond in self.calc_conditions.values()]
+        return tuple(cond.joint_name for cond in self.calc_conditions.values())
 
-    def get_axis_points(self) -> list[npt.NDArray[np.float64]]:
-        """Get ordered list of survey points for each axis.
+    def get_axis_points(self) -> tuple[npt.NDArray[np.float64], ...]:
+        """Get ordered tuple of survey points for each axis.
 
         Returns:
-            List of survey point arrays corresponding to each joint axis.
+            Tuple of survey point arrays corresponding to each joint axis.
         """
-        return [cond.survey_points for cond in self.calc_conditions.values()]
+        return tuple(cond.survey_points for cond in self.calc_conditions.values())
 
     def add_axis(self, joint_name: str, survey_points: npt.NDArray[np.float64]) -> None:
         """Add a joint axis for range calculation.
@@ -454,39 +454,52 @@ class RangeCalculator:
         logger.debug("Successfully imported and reconstructed calculation results.")
         return instance
 
-    def plot(self):
-        from linkmotion.visual.range import plot_2d, plot_3d
+    def plot(self, **conditional_kwargs: int):
+        """Plot the range calculation results using 2D or 3D visualization."""
+        from linkmotion.visual.range import plot_nd
 
         if self.results is None:
             raise ValueError(
                 "Calculation results are not available. Run execute() first."
             )
 
-        if len(self.get_axis_names()) == 2:
-            axis_points = self.get_axis_points()
-            labels = self.get_axis_names()
-            plot_2d(
-                mesh_grid=self.results,
-                x_points=axis_points[0],
-                y_points=axis_points[1],
-                x_label=labels[0],
-                y_label=labels[1],
+        plot_nd(
+            mesh_grid=self.results,
+            points_array=self.get_axis_points(),
+            axis_labels=self.get_axis_names(),
+            axis_ranges=tuple(
+                (self.calc_conditions[name].min, self.calc_conditions[name].max)
+                for name in self.get_axis_names()
+            ),
+            title="Range Calculation Results",
+            **conditional_kwargs,
+        )
+
+    def validate_result(self, **axis_indices: int):
+        """Validate calculation results at specified axis indices."""
+        if set(axis_indices.keys()) != set(self.get_axis_names()):
+            raise ValueError(
+                "Provided axis names do not match calculation axes. "
+                f"Expected: {self.get_axis_names()}, "
+                f"Got: {tuple(axis_indices.keys())}"
             )
 
-        elif len(self.get_axis_names()) == 3:
-            axis_points = self.get_axis_points()
-            labels = self.get_axis_names()
-            plot_3d(
-                mesh_grid=self.results,
-                x_points=axis_points[0],
-                y_points=axis_points[1],
-                time_points=axis_points[2],
-                x_label=labels[0],
-                y_label=labels[1],
-                time_label=labels[2],
+        for name, ind in axis_indices.items():
+            move_value = self.calc_conditions[name].survey_points[ind]
+            logger.debug(
+                f"Moving axis '{name}' to survey point index {ind} ({move_value})"
             )
+            self.cm.mm.move(name, ind)
 
-        else:
-            raise NotImplementedError(
-                "Plotting is only implemented for 2D and 3D data."
+        calculated_result = self.cm.distance(self.link_names1, self.link_names2)
+
+        if self.results is None:
+            raise ValueError(
+                "Calculation results are not available. Run execute() first."
             )
+        expected_result = self.results[
+            [axis_indices[name] for name in self.get_axis_names()]
+        ]
+
+        print(f"Calculated distance: {calculated_result.min_distance:.3f}")
+        print(f"Expected result from pre-calculated data: {expected_result:.3f}")

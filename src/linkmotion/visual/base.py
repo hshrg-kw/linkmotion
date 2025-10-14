@@ -1,4 +1,11 @@
 # type: ignore
+"""Base visualization utilities for 3D rendering using k3d.
+
+This module provides fundamental visualization classes and helper functions
+for creating 3D plots with k3d. It includes utilities for color conversion,
+plot management, and basic geometric primitives like lines, points, and vectors.
+"""
+
 import logging
 from typing import Literal
 
@@ -17,8 +24,27 @@ logger = logging.getLogger(__name__)
 def rgba_to_hex(
     rgba_array_0to1: RGBA0to1s,
 ) -> np.ndarray[tuple[int], np.dtype[np.int64]]:
+    """Converts RGBA colors (0-1 range) to hexadecimal color integers.
+
+    This function is commonly used to convert color arrays from normalized
+    RGBA format (values between 0 and 1) to hexadecimal integers suitable
+    for k3d visualization. The alpha channel is ignored in the conversion.
+
+    Args:
+        rgba_array_0to1: Array of RGBA colors with shape (N, 4) where each
+            color component is in the range [0, 1].
+
+    Returns:
+        Array of hexadecimal color integers with shape (N,).
+
+    Example:
+        >>> rgba = np.array([[1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 0.0, 0.5]])
+        >>> rgba_to_hex(rgba)
+        array([16711680, 65280])  # Red and Green
+    """
     hex_colors = []
     for rgba in rgba_array_0to1:
+        # Convert normalized RGB values (0-1) to 8-bit integers (0-255)
         hex_string = "0x{:02x}{:02x}{:02x}".format(
             int(rgba[0] * 255),
             int(rgba[1] * 255),
