@@ -295,14 +295,12 @@ def plot_nd(
             title=title,
             x_label=axis_labels[0],
             y_label=axis_labels[1],
-            z_label=axis_labels[2] if len(axis_labels) > 2 else "Z Axis",
-            time_label=axis_labels[3] if len(axis_labels) > 3 else "Time Axis",
+            z_label="Result",
+            time_label=axis_labels[2],
             x_min=axis_ranges[0][0] if axis_ranges else None,
             x_max=axis_ranges[0][1] if axis_ranges else None,
             y_min=axis_ranges[1][0] if axis_ranges else None,
             y_max=axis_ranges[1][1] if axis_ranges else None,
-            z_min=axis_ranges[2][0] if axis_ranges else None,
-            z_max=axis_ranges[2][1] if axis_ranges else None,
         )
 
     else:
