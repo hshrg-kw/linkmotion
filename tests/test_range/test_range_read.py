@@ -615,8 +615,8 @@ class TestPlot:
         )
         reader = RangeReader(results, axis_names, axis_points)
 
-        # The error could be NotImplementedError or ModuleNotFoundError if plotly is not installed
-        with pytest.raises((NotImplementedError, ModuleNotFoundError)):
+        # The error could be ValueError or ModuleNotFoundError if plotly is not installed
+        with pytest.raises((ValueError, ModuleNotFoundError)):
             reader.plot()
 
 
