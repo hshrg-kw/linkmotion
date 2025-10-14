@@ -185,6 +185,62 @@ class CollisionMeshCustomizer:
                 shape.collision_mesh, shape.color
             )
 
+    @staticmethod
+    def from_mesh_to_bounding_box(robot: Robot, link_names: set[str]) -> None:
+        """Convert robot mesh shapes to their bounding box shapes.
+
+        Args:
+            robot: Robot instance to modify.
+            link_names: Set of link names to process.
+        """
+        for link_name in link_names:
+            link = robot.link(link_name)
+            shape = link.shape
+            if not isinstance(shape, MeshShape):
+                logger.debug(
+                    f"the from_mesh_to_bounding_box operation of Link {link_name} shape is skipped because it is not MeshShape"
+                )
+                continue
+            link.shape = from_mesh_to_bounding_box(shape.collision_mesh, shape.color)
+
+    @staticmethod
+    def from_mesh_to_bounding_sphere(robot: Robot, link_names: set[str]) -> None:
+        """Convert robot mesh shapes to their bounding sphere shapes.
+
+        Args:
+            robot: Robot instance to modify.
+            link_names: Set of link names to process.
+        """
+        for link_name in link_names:
+            link = robot.link(link_name)
+            shape = link.shape
+            if not isinstance(shape, MeshShape):
+                logger.debug(
+                    f"the from_mesh_to_bounding_sphere operation of Link {link_name} shape is skipped because it is not MeshShape"
+                )
+                continue
+            link.shape = from_mesh_to_bounding_sphere(shape.collision_mesh, shape.color)
+
+    @staticmethod
+    def from_mesh_to_bounding_cylinder(robot: Robot, link_names: set[str]) -> None:
+        """Convert robot mesh shapes to their bounding cylinder shapes.
+
+        Args:
+            robot: Robot instance to modify.
+            link_names: Set of link names to process.
+        """
+        for link_name in link_names:
+            link = robot.link(link_name)
+            shape = link.shape
+            if not isinstance(shape, MeshShape):
+                logger.debug(
+                    f"the from_mesh_to_bounding_cylinder operation of Link {link_name} shape is skipped because it is not MeshShape"
+                )
+                continue
+            link.shape = from_mesh_to_bounding_cylinder(
+                shape.collision_mesh, shape.color
+            )
+
 
 def from_mesh_to_bounding_primitive(
     mesh: trimesh.Trimesh,
@@ -213,3 +269,60 @@ def from_mesh_to_bounding_primitive(
         return Cylinder(d["radius"], d["height"], transform, color)
     else:
         raise ValueError(f"Unsupported primitive kind: {d['kind']}")
+
+
+def from_mesh_to_bounding_box(
+    mesh: trimesh.Trimesh,
+    color: RGBA0to1 | None = None,
+) -> Box:
+    """Convert a trimesh to its bounding box shape.
+
+    Args:
+        mesh: Input triangular mesh.
+        color: Optional color for the resulting shape.
+
+    Returns:
+        Bounding box shape.
+    """
+    box_mesh = mesh.bounding_box
+    d = box_mesh.to_dict()
+    transform = Transform.from_4x4(np.array(d["transform"]))
+    return Box(np.array(d["extents"]), transform, color)
+
+
+def from_mesh_to_bounding_sphere(
+    mesh: trimesh.Trimesh,
+    color: RGBA0to1 | None = None,
+) -> Sphere:
+    """Convert a trimesh to its bounding sphere shape.
+
+    Args:
+        mesh: Input triangular mesh.
+        color: Optional color for the resulting shape.
+
+    Returns:
+        Bounding sphere shape.
+    """
+    sphere_mesh = mesh.bounding_sphere
+    d = sphere_mesh.to_dict()
+    transform = Transform.from_4x4(np.array(d["transform"]))
+    return Sphere(d["radius"], transform.position, color)
+
+
+def from_mesh_to_bounding_cylinder(
+    mesh: trimesh.Trimesh,
+    color: RGBA0to1 | None = None,
+) -> Cylinder:
+    """Convert a trimesh to its bounding cylinder shape.
+
+    Args:
+        mesh: Input triangular mesh.
+        color: Optional color for the resulting shape.
+
+    Returns:
+        Bounding cylinder shape.
+    """
+    cylinder_mesh = mesh.bounding_cylinder
+    d = cylinder_mesh.to_dict()
+    transform = Transform.from_4x4(np.array(d["transform"]))
+    return Cylinder(d["radius"], d["height"], transform, color)
