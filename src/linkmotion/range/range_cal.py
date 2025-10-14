@@ -476,7 +476,8 @@ class RangeCalculator:
         )
 
     def validate_result(self, **axis_indices: int):
-        """Validate calculation results at specified axis indices."""
+        """Validate calculation results at specified axis indices.
+        Please override if necessary."""
         if set(axis_indices.keys()) != set(self.get_axis_names()):
             raise ValueError(
                 "Provided axis names do not match calculation axes. "
@@ -489,7 +490,7 @@ class RangeCalculator:
             logger.debug(
                 f"Moving axis '{name}' to survey point index {ind} ({move_value})"
             )
-            self.cm.mm.move(name, ind)
+            self.cm.mm.move(name, move_value)
 
         calculated_result = self.cm.distance(self.link_names1, self.link_names2)
 
@@ -498,7 +499,7 @@ class RangeCalculator:
                 "Calculation results are not available. Run execute() first."
             )
         expected_result = self.results[
-            [axis_indices[name] for name in self.get_axis_names()]
+            tuple([axis_indices[name] for name in self.get_axis_names()])
         ]
 
         print(f"Calculated distance: {calculated_result.min_distance:.3f}")
