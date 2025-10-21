@@ -1,5 +1,5 @@
 import logging
-from enum import Enum, auto
+from enum import auto, StrEnum
 import numpy as np
 
 from linkmotion.const import SMALL_NUM, LARGE_NUM
@@ -9,7 +9,7 @@ from linkmotion.transform.transform import Transform
 logger = logging.getLogger(__name__)
 
 
-class JointType(Enum):
+class JointType(StrEnum):
     """
     Enum for different types of joints, based on URDF specification.
     See: http://wiki.ros.org/urdf/XML/joint#Attributes

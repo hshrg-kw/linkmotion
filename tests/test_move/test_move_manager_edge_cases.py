@@ -134,7 +134,7 @@ class TestMoveManagerEdgeCases:
             manager.move("prismatic_joint", 1.5)
 
         assert (
-            "Moving joint 'prismatic_joint' of type 'JointType.PRISMATIC' to value: 1.5"
+            "Moving joint 'prismatic_joint' of type 'prismatic' to value: 1.5"
             in caplog.text
         )
 
