@@ -111,8 +111,8 @@ def assert_urdf_contains_expected_elements(
     urdf_content: str,
     expected_links: int,
     expected_joints: int,
-    expected_origins: int = None,
-    expected_axes: int = None,
+    expected_origins: int | None = None,
+    expected_axes: int | None = None,
 ) -> None:
     """Verify that URDF contains expected structural elements.
 
