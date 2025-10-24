@@ -1,17 +1,39 @@
 name: Publish Python Package to PyPI
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
 
 permissions:
-  contents: read
-  id-token: write # for PyPI Trusted Publishing and GitHub Pages deployment
-  pages: write    # for GitHub Pages deployment
+  contents: write # for please-release
+  pull-requests: write # for please-release
+  id-token: write # for deploy-pages
+  pages: write # for deploy-pages
+
 
 jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      # https://github.com/googleapis/release-please-action?tab=readme-ov-file
+      - uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-type: python
+
   build-docs-and-publish-lib:
+    if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     timeout-minutes: 10 
     environment:
@@ -31,6 +53,13 @@ jobs:
       # https://docs.astral.sh/uv/concepts/projects/sync/
       - name: Install the project and dependencies
         run: uv sync --locked --all-extras --dev
+
+      - name: Confirm Version Tag
+        run: |
+          echo "Tag from release-please: ${{ needs.release-please.outputs.tag_name }}"
+          git fetch --tags --depth=1
+          echo "git tag --list:"
+          git tag --list
 
       - name: Build document files
         id: build
@@ -58,6 +87,7 @@ jobs:
 
   # https://github.com/actions/upload-pages-artifact
   deploy-pages:
+    if: ${{ needs.release-please.outputs.release_created }}
     name: Deploy Docs to GitHub Pages
     environment:
       name: github-pages
