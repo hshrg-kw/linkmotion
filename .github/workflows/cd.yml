@@ -33,6 +33,7 @@ jobs:
           release-type: python
 
   build-docs-and-publish-lib:
+    needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     runs-on: ubuntu-latest
     timeout-minutes: 10 
@@ -87,6 +88,7 @@ jobs:
 
   # https://github.com/actions/upload-pages-artifact
   deploy-pages:
+    needs: release-please
     if: ${{ needs.release-please.outputs.release_created }}
     name: Deploy Docs to GitHub Pages
     environment:
