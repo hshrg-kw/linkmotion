@@ -1,0 +1,27 @@
+fail_fast: true
+repos:
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff-check
+        language: system
+        entry: uv run ruff check --fix
+        pass_filenames: true
+        types: [python]
+
+      - id: ruff-format
+        name: ruff-format
+        language: system
+        entry: uv run ruff format
+        pass_filenames: true
+        types: [python]
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        language: system
+        entry: uv run pytest
+        pass_filenames: false
+        files: ^(src/|tests/)
+        types: [python]
