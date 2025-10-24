@@ -3,7 +3,7 @@ import time
 import logging
 from pathlib import Path
 from itertools import product
-from typing import Dict, Optional, Iterable
+from typing import Dict, Optional, Iterable, Type, TypeVar
 from multiprocessing import Pool
 
 import psutil
@@ -16,6 +16,7 @@ from linkmotion.collision.manager import CollisionManager
 from linkmotion.move.manager import MoveManager
 from linkmotion.robot.joint import JointType, Joint
 
+T = TypeVar("T", bound="RangeCalculator")
 logger = logging.getLogger(__name__)
 
 
@@ -388,7 +389,7 @@ class RangeCalculator:
         logger.info(f"Successfully exported calculation results to '{file_path}'")
 
     @classmethod
-    def import_from_file(cls, file_path: Path, robot: Robot) -> "RangeCalculator":
+    def import_from_file(cls: Type[T], file_path: Path, robot: Robot) -> T:
         """Imports calculation results from a compressed NumPy file.
 
         Creates a new RangeCalculator instance and populates it with data

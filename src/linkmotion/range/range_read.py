@@ -1,3 +1,4 @@
+from typing import Type, TypeVar
 from pathlib import Path
 import logging
 
@@ -5,6 +6,7 @@ import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 
 
+T = TypeVar("T", bound="RangeReader")
 logger = logging.getLogger(__name__)
 
 
@@ -330,7 +332,7 @@ class RangeReader:
         return self._interpolator(points_array)
 
     @classmethod
-    def import_from_file(cls, file_path: Path) -> "RangeReader":
+    def import_from_file(cls: Type[T], file_path: Path) -> T:
         """Import range data from a saved .npz file.
 
         Args:
