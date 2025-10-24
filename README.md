@@ -2,6 +2,8 @@
 
 A comprehensive Python library for robotics applications, providing tools for robot modeling, joint control, collision detection, visualization, and URDF import/export functionality.
 
+[API Reference](https://hshrg-kw.github.io/linkmotion/)
+
 ## Features
 
 ### 🤖 Robot Modeling
@@ -355,7 +357,7 @@ linkmotion/
 
 ## API Reference
 
-Here is [API Reference](https://hshrg-kw.github.io/linkmotion/).
+[API Reference](https://hshrg-kw.github.io/linkmotion/) is available.
 
 ### Core Classes
 
